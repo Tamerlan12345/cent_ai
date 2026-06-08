@@ -4,7 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const isRealSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
+export const isRealSupabaseConfigured = !!(
+  supabaseAnonKey &&
+  (supabaseUrl.startsWith('https://') || supabaseUrl.startsWith('http://'))
+);
 
 // Real client (if configured)
 const realSupabase = isRealSupabaseConfigured
