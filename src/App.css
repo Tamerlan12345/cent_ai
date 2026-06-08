@@ -1,0 +1,286 @@
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content-viewport {
+  flex-grow: 1;
+  width: 100%;
+}
+
+.main-content {
+  padding-bottom: 5rem;
+}
+
+/* Practice Workspace Styles */
+.practice-workspace-page {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.practice-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.practice-page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.practice-week-nav {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 0.25rem;
+}
+
+.practice-week-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.practice-week-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.practice-week-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #000000;
+  font-weight: 700;
+}
+
+[data-theme="light"] .practice-week-btn.active {
+  color: #FFFFFF;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.workspace-left,
+.workspace-right {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Task Detail Cards */
+.task-detail-card,
+.checklist-card,
+.prompt-builder-interactive-card {
+  padding: 1.75rem;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.card-header-iconified {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.card-header-icon {
+  color: var(--accent-primary);
+  width: 20px;
+  height: 20px;
+}
+
+.checklist-card .card-header-icon {
+  color: var(--accent-secondary);
+}
+
+.prompt-builder-interactive-card .card-header-icon {
+  color: var(--accent-success);
+}
+
+.task-detail-card h3,
+.checklist-card h3,
+.prompt-builder-interactive-card h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.task-long-desc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.task-steps h4,
+.task-hints h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.task-steps ol {
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.task-hints ul {
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Checklist widget */
+.checklist-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checklist-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .checklist-item-row {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.checklist-item-row:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.checklist-item-row.checked {
+  border-color: rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.03);
+  color: var(--accent-success);
+}
+
+.checklist-item-row input[type="checkbox"] {
+  margin-top: 0.2rem;
+  accent-color: var(--accent-success);
+}
+
+.quiz-container-workspace {
+  margin-top: 1rem;
+}
+
+/* Global Footer */
+.global-footer {
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  padding: 2.5rem 1rem;
+  margin-top: auto;
+  text-align: center;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.footer-meta {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* Not Found Page */
+.not-found-page {
+  padding: 6rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+@media (max-width: 992px) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.text-center {
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+}
+
+.locked-week-container {
+  max-width: 600px;
+  margin: 4rem auto;
+  padding: 3rem;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.lock-icon {
+  color: var(--accent-secondary);
+  animation: pulse 2s infinite;
+}
+
+.locked-week-meta {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+  width: 100%;
+}
+
+.practice-week-btn.locked {
+  opacity: 0.6;
+  border-style: dashed;
+  color: var(--text-muted);
+}
+

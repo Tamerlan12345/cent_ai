@@ -1,0 +1,220 @@
+.prompt-builder-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.builder-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 2rem;
+}
+
+.builder-inputs-column,
+.builder-preview-column {
+  padding: 1.5rem;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.column-header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.input-group textarea {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  outline: none;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .input-group textarea {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.input-group textarea:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px var(--glow-color);
+}
+
+.w-full {
+  width: 100%;
+}
+
+.launch-btn {
+  margin-top: 0.5rem;
+}
+
+.preview-container {
+  flex-grow: 1;
+  background: #090D16;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.preview-prompt-text {
+  font-family: var(--font-mono);
+  font-size: 0.825rem;
+  color: #E2E8F0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.success-color {
+  color: var(--accent-success);
+}
+
+/* Simulation loading block */
+.simulation-loading {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+}
+
+.loading-icon {
+  color: var(--accent-primary);
+}
+
+/* Simulation feedback */
+.simulation-results-box {
+  padding: 2rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.results-header {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.results-header h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.score-widget {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(155, 93, 229, 0.1);
+  border: 1px solid rgba(155, 93, 229, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.star-icon {
+  color: var(--accent-secondary);
+  fill: var(--accent-secondary);
+}
+
+.score-value {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.score-label {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.results-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.feedback-comments h5,
+.agent-code-output h5 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.feedback-comments ul {
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.agent-code-output {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.simulated-response-md {
+  background: #090D16;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  padding: 1.25rem;
+  font-size: 0.9rem;
+  color: #E2E8F0;
+  line-height: 1.6;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.simulated-response-md p {
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .builder-grid {
+    grid-template-columns: 1fr;
+  }
+}

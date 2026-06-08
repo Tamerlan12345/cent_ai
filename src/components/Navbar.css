@@ -1,0 +1,243 @@
+.navbar-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin: 1.5rem auto;
+  max-width: 1200px;
+  width: calc(100% - 2rem);
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  background: rgba(24, 32, 48, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .navbar-header {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.logo-icon {
+  color: var(--accent-primary);
+  width: 28px;
+  height: 28px;
+}
+
+.logo-text {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.logo-accent {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-link {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="light"] .nav-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.nav-link.active {
+  color: var(--accent-primary);
+  background: rgba(0, 242, 254, 0.08);
+}
+
+[data-theme="light"] .nav-link.active {
+  color: var(--accent-primary);
+  background: rgba(2, 132, 199, 0.08);
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.progress-widget {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="light"] .progress-widget {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.progress-icon {
+  color: var(--accent-secondary);
+  width: 16px;
+  height: 16px;
+}
+
+.progress-text-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.progress-label {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.progress-value {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.progress-bar-bg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .progress-bar-bg {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  transition: width 0.4s ease-out;
+}
+
+.theme-toggle-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+}
+
+@media (max-width: 768px) {
+  .navbar-header {
+    margin: 0.75rem auto;
+    width: calc(100% - 1rem);
+    padding: 0.5rem 1rem;
+  }
+  
+  .nav-menu {
+    display: none; /* In v1 for simplicity, we can fallback or let user use a mobile menu. Let's make them wrap or use icons to save space */
+  }
+
+  .nav-menu {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    padding: 0.5rem;
+    justify-content: space-around;
+    z-index: 100;
+    border-radius: 0;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+  }
+  
+  .navbar-actions .progress-widget {
+    display: none;
+  }
+}
+
+.user-profile-badge-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+[data-theme="light"] .user-profile-badge-nav {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.user-name-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sign-out-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.sign-out-btn:hover {
+  color: var(--accent-error);
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.15);
+}
+
