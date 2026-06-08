@@ -35,7 +35,7 @@ if (!getMockData('profiles')) {
   setMockData('profiles', [
     { id: 'mock-teacher-id', email: 'teacher@cent.ai', password: 'password123', role: 'teacher', name: 'Куратор Лаборатории', cohort_id: 1 },
     { id: 'mock-student-id', email: 'student@cent.ai', password: 'password123', role: 'student', name: 'Иван Новичок', cohort_id: 1 },
-    { id: 'mock-admin-id', email: 'admin', password: 'admin12345', role: 'admin', name: 'Администратор', cohort_id: 1 }
+    { id: 'mock-admin-id', email: 'admin@cic.kz', password: 'admin12345', role: 'admin', name: 'Администратор', cohort_id: 1 }
   ]);
 }
 
