@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Users, FileText, Calendar } from 'lucide-react';
+import { courseModules } from '../content/courseData';
 import './TeacherDashboard.css';
 
 interface StudentProfile {
@@ -116,9 +117,9 @@ export const TeacherDashboard: React.FC = () => {
                 onChange={(e) => handleUpdateActiveWeek(Number(e.target.value))}
                 className="week-select-dropdown"
               >
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((w) => (
-                  <option key={w} value={w}>
-                    Неделя {w}
+                {courseModules.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    Неделя {m.id}
                   </option>
                 ))}
               </select>

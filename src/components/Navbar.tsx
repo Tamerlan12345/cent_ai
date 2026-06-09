@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sun, Moon, GraduationCap, Trophy, LogOut } from 'lucide-react';
+import { courseModules } from '../content/courseData';
 import type { UserProfile } from '../types';
 import './Navbar.css';
 
@@ -35,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     navItems.push({ id: '/teacher', label: userProfile?.role === 'admin' ? 'Админ' : 'Куратор' });
   }
 
-  const progressPercentage = Math.round((completedWeeks.length / 10) * 100);
+  const progressPercentage = Math.round((completedWeeks.length / courseModules.length) * 100);
 
   return (
     <header className="navbar-header glass-panel">
@@ -62,7 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="navbar-actions">
           {/* Progress widget */}
           {userProfile && (
-            <div className="progress-widget" title={`Завершено ${completedWeeks.length} из 8 недель`}>
+            <div className="progress-widget" title={`Завершено ${completedWeeks.length} из ${courseModules.length} недель`}>
               <Trophy className="progress-icon" />
               <div className="progress-text-container">
                 <span className="progress-label">Прогресс</span>
