@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     navItems.push({ id: '/teacher', label: userProfile?.role === 'admin' ? 'Админ' : 'Куратор' });
   }
 
-  const progressPercentage = Math.round((completedWeeks.length / 8) * 100);
+  const progressPercentage = Math.round((completedWeeks.length / 10) * 100);
 
   return (
     <header className="navbar-header glass-panel">

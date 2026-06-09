@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
-import { Copy, Check, Play, RefreshCw, Star, MessageSquareCode } from 'lucide-react';
+import { Copy, Check, Play, RefreshCw, MessageSquareCode, CheckCircle, AlertCircle } from 'lucide-react';
+import { supabase } from '../supabaseClient';
+import { reviewHomework } from '../lib/gemini';
 import type { PracticeTask } from '../types';
 import './PromptBuilder.css';
 
 interface PromptBuilderProps {
   practice: PracticeTask;
-  onSuccess: () => void;
+  weekTitle: string;
+  studentId: string;
+  weekId: number;
+  onHomeworkApproved: () => void;
 }
 
-export const PromptBuilder: React.FC<PromptBuilderProps> = ({ practice, onSuccess }) => {
+export const PromptBuilder: React.FC<PromptBuilderProps> = ({
+  practice,
+  weekTitle,
+  studentId,
+  weekId,
+  onHomeworkApproved,
+}) => {
   const [goal, setGoal] = useState(practice.initialPrompt.goal);
   const [context, setContext] = useState(practice.initialPrompt.context);
   const [constraints, setConstraints] = useState(practice.initialPrompt.constraints);
@@ -19,7 +30,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({ practice, onSucces
   const [simulationResult, setSimulationResult] = useState<{
     score: number;
     comments: string[];
-    agentResponse: string;
+    review_text: string;
   } | null>(null);
 
   const combinedPrompt = `# ИНСТРУКЦИЯ ДЛЯ AI-АГЕНТА
@@ -50,7 +61,7 @@ ${dod || '[Не заполнено]'}`;
     setSimulationResult(null);
   };
 
-  const handleSimulate = () => {
+  const handleSimulate = async () => {
     if (!goal || !context || !constraints || !dod) {
       alert("Пожалуйста, заполните все разделы конструктора, чтобы AI-агент получил полноценный контекст!");
       return;
@@ -59,38 +70,37 @@ ${dod || '[Не заполнено]'}`;
     setSimulating(true);
     setSimulationResult(null);
 
-    // Simulate network lag / thinking
-    setTimeout(() => {
-      setSimulating(false);
-      
-      // Dynamic rating logic based on input length
-      const totalLength = goal.length + context.length + constraints.length + dod.length;
-      let calculatedScore = Math.min(65 + Math.floor(totalLength / 12), 99);
-      
-      // Specific checks
-      const comments = [...practice.simulationFeedback.comments];
-      if (constraints.toLowerCase().includes('vanilla css') || constraints.toLowerCase().includes('чистый css')) {
-        calculatedScore = Math.min(calculatedScore + 5, 100);
-      } else {
-        calculatedScore -= 10;
-        comments.push("Рекомендуется жестко прописать отказ от Tailwind CSS в Ограничениях для строгого соблюдения стека.");
-      }
-
-      if (dod.toLowerCase().includes('build') || dod.toLowerCase().includes('сборка')) {
-        calculatedScore = Math.min(calculatedScore + 5, 100);
-      } else {
-        comments.push("Добавьте команду запуска тестов или сборки ('npm run build') в DoD, чтобы агент сам верифицировал код.");
-      }
-
-      setSimulationResult({
-        score: Math.max(calculatedScore, 60),
-        comments: comments,
-        agentResponse: practice.simulationFeedback.agentResponse,
+    try {
+      const data = await reviewHomework({
+        prompt_text: combinedPrompt,
+        practice_type: 'prompt',
+        week_title: weekTitle,
+        dod_criteria: practice.checklist,
       });
 
-      // Notify parent of successful validation
-      onSuccess();
-    }, 1500);
+      setSimulationResult(data);
+
+      await supabase.from('homeworks').insert({
+        student_id: studentId,
+        week_id: weekId,
+        code_html: combinedPrompt, // Store prompt in html column for simplicity
+        code_css: '',
+        code_js: '',
+        score: data.score,
+        review_text: data.review_text,
+        status: data.score >= 80 ? 'approved' : 'rejected',
+        submitted_at: new Date().toISOString(),
+      });
+
+      if (data.score >= 80) {
+        onHomeworkApproved();
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : 'Ошибка API';
+      alert(`Ошибка проверки промпта: ${errMsg}`);
+    } finally {
+      setSimulating(false);
+    }
   };
 
   return (
@@ -155,10 +165,10 @@ ${dod || '[Не заполнено]'}`;
             className="btn btn-primary w-full launch-btn"
           >
             {simulating ? (
-              <span>Анализ промпта моделью...</span>
+              <span>Анализ промпта моделью Gemini...</span>
             ) : (
               <>
-                <Play size={16} /> Запустить симуляцию
+                <Play size={16} /> Проверить промпт ИИ
               </>
             )}
           </button>
@@ -192,28 +202,37 @@ ${dod || '[Не заполнено]'}`;
         <div className="simulation-loading glass-panel glow-border-cyan animate-pulse">
           <MessageSquareCode size={28} className="loading-icon" />
           <div>
-            <h4>Идет симуляция разработки...</h4>
-            <p>Виртуальный AI-агент парсит промпт, проверяет зависимости и генерирует код.</p>
+            <h4>Идет анализ структуры промпта...</h4>
+            <p>ИИ Gemini оценивает полноту контекста, наличие ограничений и измеримость Definition of Done.</p>
           </div>
         </div>
       )}
 
       {simulationResult && (
-        <div className="simulation-results-box glass-panel glow-border-purple animate-fade-in">
+        <div className={`simulation-results-box glass-panel animate-fade-in ${simulationResult.score >= 80 ? 'approved' : 'rejected'}`}>
           <div className="results-header">
-            <div className="score-widget">
-              <Star className="star-icon" />
-              <div>
-                <span className="score-value">{simulationResult.score}/100</span>
-                <span className="score-label">Оценка промпта</span>
-              </div>
+            <div className="grade-badge">
+              <span>{simulationResult.score} / 100</span>
+              <span className="grade-label">Оценка ИИ</span>
             </div>
-            <h4>Результат Тестирования Симулятора</h4>
+            <div className="report-status-text">
+              {simulationResult.score >= 80 ? (
+                <div className="status-indicator success">
+                  <CheckCircle size={18} />
+                  <span>Промпт зачтен!</span>
+                </div>
+              ) : (
+                <div className="status-indicator error">
+                  <AlertCircle size={18} />
+                  <span>Не зачтено. Доработайте структуру.</span>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="results-body">
             <div className="feedback-comments">
-              <h5>Рекомендации по улучшению:</h5>
+              <h5>Рекомендации преподавателя:</h5>
               <ul>
                 {simulationResult.comments.map((comment, index) => (
                   <li key={index}>{comment}</li>
@@ -222,13 +241,16 @@ ${dod || '[Не заполнено]'}`;
             </div>
 
             <div className="agent-code-output">
-              <h5>Код, сгенерированный AI-агентом:</h5>
-              <div className="simulated-response-md">
-                {simulationResult.agentResponse.split('\n').map((line, idx) => (
-                  <p key={idx} style={{ fontFamily: line.startsWith('###') || !line.startsWith(' ') ? 'var(--font-sans)' : 'var(--font-mono)' }}>
-                    {line}
-                  </p>
-                ))}
+              <h5>Подробный разбор промпта:</h5>
+              <div className="markdown-viewport">
+                {simulationResult.review_text.split('\n').map((line, idx) => {
+                  if (line.startsWith('###')) {
+                    return <h4 key={idx} style={{ margin: '1rem 0 0.5rem 0', color: 'var(--text-primary)' }}>{line.replace(/###/g, '').trim()}</h4>;
+                  } else if (line.startsWith('-')) {
+                    return <li key={idx} style={{ marginLeft: '1.25rem', color: 'var(--text-secondary)' }}>{line.substring(1).trim()}</li>;
+                  }
+                  return <p key={idx} style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>{line}</p>;
+                })}
               </div>
             </div>
           </div>

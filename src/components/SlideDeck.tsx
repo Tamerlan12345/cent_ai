@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   ChevronLeft, ChevronRight, AlertTriangle, CheckCircle,
-  Code, BookOpen, Lightbulb, List, Zap, ArrowRight
+  Code, BookOpen, Lightbulb, Zap, ArrowRight
 } from 'lucide-react';
 import type { CourseModule } from '../types';
 import './SlideDeck.css';
@@ -33,19 +33,19 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
     }, 180);
   };
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentSlideIndex < activeModule.slides.length - 1) {
       triggerAnim('next');
       setTimeout(() => setCurrentSlideIndex((i) => i + 1), 180);
     }
-  };
+  }, [currentSlideIndex, activeModule.slides.length]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     if (currentSlideIndex > 0) {
       triggerAnim('prev');
       setTimeout(() => setCurrentSlideIndex((i) => i - 1), 180);
     }
-  };
+  }, [currentSlideIndex]);
 
   const handleDotClick = (idx: number) => {
     triggerAnim(idx > currentSlideIndex ? 'next' : 'prev');
@@ -65,7 +65,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [currentSlideIndex, activeModule.slides.length]);
+  }, [handleNext, handlePrev]);
 
   return (
     <section className="slides-section">
@@ -104,6 +104,15 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
 
         {/* Slide Body with animation */}
         <div className={`slide-body ${animClass}`} key={`${selectedWeekId}-${currentSlideIndex}`}>
+
+
+          {/* ── IMAGE SUPPORT ── */}
+          {activeSlide.imageUrl && (
+            <div className="slide-image-wrapper glass-panel glow-border-cyan">
+              <img src={activeSlide.imageUrl} alt={activeSlide.imageCaption || activeSlide.title} className="slide-image" />
+              {activeSlide.imageCaption && <span className="slide-image-caption">{activeSlide.imageCaption}</span>}
+            </div>
+          )}
 
           {/* ── TEXT ── */}
           {activeSlide.type === 'text' && (

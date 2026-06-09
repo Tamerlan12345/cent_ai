@@ -31,11 +31,15 @@ export interface Slide {
   diagramSteps?: DiagramStep[];
   // keypoints type
   keyPointsList?: KeyPoint[];
+  // image support
+  imageUrl?: string;
+  imageCaption?: string;
 }
 
 export interface PracticeTask {
   id: string;
   title: string;
+  type: 'prompt' | 'code';
   durationMinutes: number;
   description: string;
   steps: string[];

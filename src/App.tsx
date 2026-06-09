@@ -8,6 +8,7 @@ import { Quiz } from './components/Quiz';
 import { ResourceLibrary } from './components/ResourceLibrary';
 import { Auth } from './components/Auth';
 import { CodeEditor } from './components/CodeEditor';
+import { PromptBuilder } from './components/PromptBuilder';
 import { TeacherDashboard } from './components/TeacherDashboard';
 import { supabase } from './supabaseClient';
 import { courseModules } from './content/courseData';
@@ -293,16 +294,31 @@ function App() {
                   <div className="prompt-builder-interactive-card glass-panel">
                     <div className="card-header-iconified">
                       <GraduationCap className="card-header-icon" />
-                      <h3>IDE Песочница Домашней Работы</h3>
+                      <h3>
+                        {activeModule.practice.type === 'prompt'
+                          ? 'Конструктор инженерных запросов'
+                          : 'IDE Песочница Домашней Работы'}
+                      </h3>
                     </div>
-                    <CodeEditor
-                      key={selectedWeekId}
-                      weekId={selectedWeekId}
-                      weekTitle={activeModule.title}
-                      dodCriteria={activeModule.practice.checklist}
-                      studentId={userProfile?.id || ''}
-                      onHomeworkApproved={() => handleCompleteWeek(selectedWeekId)}
-                    />
+                    {activeModule.practice.type === 'prompt' ? (
+                      <PromptBuilder
+                        key={selectedWeekId}
+                        practice={activeModule.practice}
+                        weekTitle={activeModule.title}
+                        studentId={userProfile?.id || ''}
+                        weekId={selectedWeekId}
+                        onHomeworkApproved={() => handleCompleteWeek(selectedWeekId)}
+                      />
+                    ) : (
+                      <CodeEditor
+                        key={selectedWeekId}
+                        weekId={selectedWeekId}
+                        weekTitle={activeModule.title}
+                        dodCriteria={activeModule.practice.checklist}
+                        studentId={userProfile?.id || ''}
+                        onHomeworkApproved={() => handleCompleteWeek(selectedWeekId)}
+                      />
+                    )}
                   </div>
 
                   <div className="quiz-container-workspace">
