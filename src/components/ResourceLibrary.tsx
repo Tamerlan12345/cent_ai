@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ExternalLink, BookOpen, Wrench, FileText, Layout } from 'lucide-react';
-import { resourceLinks } from '../content/courseData';
+import { loadResources } from '../lib/contentService';
+import type { ResourceLink } from '../types';
 import './ResourceLibrary.css';
 
 export const ResourceLibrary: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [resourceLinks, setResourceLinks] = useState<ResourceLink[]>([]);
+
+  useEffect(() => {
+    loadResources().then(setResourceLinks);
+  }, []);
 
   const categories = [
     { id: 'all', label: 'Все ресурсы' },

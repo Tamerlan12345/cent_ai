@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Users, FileText, Calendar } from 'lucide-react';
-import { courseModules } from '../content/courseData';
 import './TeacherDashboard.css';
 
 interface StudentProfile {
@@ -11,81 +10,70 @@ interface StudentProfile {
   role: string;
 }
 
-interface HomeworkSubmission {
+interface SubmissionPayload {
+  files?: { html?: string; css?: string; js?: string };
+  criteria?: { index: number; passed: boolean; evidence: string; advice?: string }[];
+  comments?: string[];
+}
+
+interface Submission {
   id: string;
   week_id: number;
   student_id: string;
+  course_slug: string;
   score: number;
-  status: string;
-  submitted_at: string;
-  code_html: string;
-  code_css: string;
-  code_js: string;
+  status: 'approved' | 'rejected' | 'pending';
+  payload: SubmissionPayload | null;
   review_text: string;
+  created_at: string;
   student_profile?: StudentProfile;
 }
 
 export const TeacherDashboard: React.FC = () => {
   const [activeWeek, setActiveWeek] = useState(1);
+  const [totalWeeks, setTotalWeeks] = useState(4);
   const [students, setStudents] = useState<StudentProfile[]>([]);
-  const [submissions, setSubmissions] = useState<HomeworkSubmission[]>([]);
-  const [selectedSubmission, setSelectedSubmission] = useState<HomeworkSubmission | null>(null);
-  
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [selected, setSelected] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadDashboardData = async () => {
-    try {
-      // 1. Load active week for Cohort 1
-      const { data: cohort } = await supabase
-        .from('cohorts')
-        .select('*')
-        .eq('id', 1)
-        .single();
-      if (cohort) {
-        setActiveWeek(cohort.active_week as number);
-      }
-
-      // 2. Load all student profiles
-      const { data: profilesList } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'student');
-      if (profilesList) {
-        setStudents(profilesList as unknown as StudentProfile[]);
-      }
-
-      // 3. Load all submitted homeworks
-      const { data: homeworksList } = await supabase
-        .from('homeworks')
-        .select('*');
-      
-      if (homeworksList) {
-        // Hydrate profiles on mock database fallback
-        const hydrated = (homeworksList as unknown as HomeworkSubmission[]).map((hw) => {
-          const studentProfile = (profilesList as unknown as StudentProfile[] || []).find((p) => p.id === hw.student_id);
-          return { ...hw, student_profile: studentProfile } as HomeworkSubmission;
-        });
-        setSubmissions(hydrated);
-      }
-    } catch (err) {
-      console.error("Error loading teacher panel:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadDashboardData();
+    (async () => {
+      try {
+        const [cohortRes, profilesRes, subsRes, courseRes] = await Promise.all([
+          supabase.from('cohorts').select('active_week').eq('id', 1).single(),
+          supabase.from('profiles').select('id,email,name,role').eq('role', 'student'),
+          supabase.from('submissions').select('*'),
+          supabase.from('course_modules').select('id').order('position'),
+        ]);
+
+        if (cohortRes.data) setActiveWeek((cohortRes.data as { active_week: number }).active_week);
+        const profileList = (profilesRes.data ?? []) as StudentProfile[];
+        setStudents(profileList);
+
+        const rawSubs = (subsRes.data ?? []) as Submission[];
+        setSubmissions(
+          rawSubs.map((s) => ({
+            ...s,
+            student_profile: profileList.find((p) => p.id === s.student_id),
+          })),
+        );
+
+        if ((courseRes.data ?? []).length > 0) setTotalWeeks((courseRes.data as unknown[]).length);
+      } catch (e) {
+        console.error('TeacherDashboard: ошибка загрузки данных', e);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   const handleUpdateActiveWeek = async (week: number) => {
     try {
       await supabase.from('cohorts').update({ active_week: week }).eq('id', 1);
       setActiveWeek(week);
-      alert(`Активная неделя когорты успешно изменена на ${week}! У всех студентов разблокирован соответствующий контент.`);
     } catch {
-      alert("Не удалось изменить активную неделю.");
+      alert('Не удалось изменить активную неделю.');
     }
   };
 
@@ -93,22 +81,22 @@ export const TeacherDashboard: React.FC = () => {
     <section className="teacher-dashboard-section">
       <div className="dashboard-header-block">
         <h2 className="dashboard-title">Кабинет Куратора Курса</h2>
-        <p className="dashboard-subtitle">Управление расписанием когорты, мониторинг студентов и аудит сданных работ</p>
+        <p className="dashboard-subtitle">
+          Управление расписанием когорты, мониторинг студентов и аудит сданных работ
+        </p>
       </div>
 
       <div className="teacher-grid">
-        {/* Left Column: Stats & Week Control */}
+        {/* ── Sidebar ── */}
         <div className="teacher-sidebar">
-          {/* Cohort Week Control */}
           <div className="dashboard-card glass-panel control-card">
             <div className="card-header-iconified">
               <Calendar className="card-header-icon" />
               <h3>Расписание Когорты</h3>
             </div>
             <p className="control-card-text">
-              Выберите текущую открытую неделю для вашей учебной группы. Уроки и слайды будут разблокированы синхронно.
+              Выберите открытую неделю для когорты — контент разблокируется синхронно у всех студентов.
             </p>
-            
             <div className="week-selector-control">
               <label htmlFor="active-week-select">Текущая неделя:</label>
               <select
@@ -117,53 +105,51 @@ export const TeacherDashboard: React.FC = () => {
                 onChange={(e) => handleUpdateActiveWeek(Number(e.target.value))}
                 className="week-select-dropdown"
               >
-                {courseModules.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    Неделя {m.id}
+                {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>
+                    Неделя {n}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Students list */}
           <div className="dashboard-card glass-panel students-card">
             <div className="card-header-iconified">
               <Users className="card-header-icon" />
-              <h3>Зарегистрировано Студентов ({students.length})</h3>
+              <h3>Студенты ({students.length})</h3>
             </div>
-            
             <div className="students-list-view">
-              {students.length > 0 ? (
-                students.map((student) => (
-                  <div key={student.id} className="student-list-item">
-                    <div className="student-avatar-mock">
-                      {student.name.charAt(0).toUpperCase()}
-                    </div>
+              {students.length === 0 ? (
+                <p className="empty-label">Нет активных студентов.</p>
+              ) : (
+                students.map((s) => (
+                  <div key={s.id} className="student-list-item">
+                    <div className="student-avatar-mock">{s.name.charAt(0).toUpperCase()}</div>
                     <div className="student-info-col">
-                      <span className="student-name">{student.name}</span>
-                      <span className="student-email">{student.email}</span>
+                      <span className="student-name">{s.name}</span>
+                      <span className="student-email">{s.email}</span>
                     </div>
                   </div>
                 ))
-              ) : (
-                <p className="empty-label">Нет активных студентов.</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Column: Submissions Table */}
+        {/* ── Main Table ── */}
         <div className="teacher-main">
           <div className="dashboard-card glass-panel submissions-card">
             <div className="card-header-iconified">
               <FileText className="card-header-icon" />
-              <h3>Сданные Работы Студентов</h3>
+              <h3>Сданные Работы</h3>
             </div>
 
             {loading ? (
-              <p className="loading-label">Идет загрузка работ...</p>
-            ) : submissions.length > 0 ? (
+              <p className="loading-label">Загрузка работ…</p>
+            ) : submissions.length === 0 ? (
+              <p className="empty-label">Пока никто не сдал домашние работы.</p>
+            ) : (
               <div className="table-responsive">
                 <table className="submissions-table">
                   <thead>
@@ -173,7 +159,7 @@ export const TeacherDashboard: React.FC = () => {
                       <th>Оценка</th>
                       <th>Статус</th>
                       <th>Дата сдачи</th>
-                      <th>Действие</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -181,25 +167,25 @@ export const TeacherDashboard: React.FC = () => {
                       <tr key={sub.id}>
                         <td>
                           <div className="table-student-name">
-                            {sub.student_profile?.name || 'Иван Иванов'}
+                            {sub.student_profile?.name ?? 'Студент'}
                           </div>
                         </td>
                         <td>Неделя {sub.week_id}</td>
                         <td className="table-score">{sub.score} / 100</td>
                         <td>
                           <span className={`table-status-badge ${sub.status}`}>
-                            {sub.status === 'approved' ? 'Зачтено' : 'Не зачтено'}
+                            {sub.status === 'approved' ? 'Зачтено' : sub.status === 'pending' ? 'На проверке' : 'Не зачтено'}
                           </span>
                         </td>
                         <td className="table-date">
-                          {new Date(sub.submitted_at).toLocaleDateString('ru-RU')}
+                          {new Date(sub.created_at).toLocaleDateString('ru-RU')}
                         </td>
                         <td>
                           <button
-                            onClick={() => setSelectedSubmission(sub)}
+                            onClick={() => setSelected(sub)}
                             className="btn btn-secondary btn-sm"
                           >
-                            Подробности
+                            Детали
                           </button>
                         </td>
                       </tr>
@@ -207,19 +193,17 @@ export const TeacherDashboard: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-            ) : (
-              <p className="empty-label">Пока никто не сдал домашние работы.</p>
             )}
           </div>
 
-          {/* Submission Details Modal Drawer */}
-          {selectedSubmission && (
+          {/* ── Detail Drawer ── */}
+          {selected && (
             <div className="submission-details-drawer glass-panel glow-border-purple animate-fade-in">
               <div className="drawer-header">
                 <h4>
-                  Детали Работы: {selectedSubmission.student_profile?.name || 'Студент'} (Неделя {selectedSubmission.week_id})
+                  {selected.student_profile?.name ?? 'Студент'} — Неделя {selected.week_id}
                 </h4>
-                <button onClick={() => setSelectedSubmission(null)} className="btn btn-secondary btn-sm">
+                <button onClick={() => setSelected(null)} className="btn btn-secondary btn-sm">
                   Закрыть
                 </button>
               </div>
@@ -227,51 +211,72 @@ export const TeacherDashboard: React.FC = () => {
               <div className="drawer-body">
                 <div className="score-summary-row">
                   <div className="score-widget">
-                    <span className="score-big">{selectedSubmission.score}</span>
+                    <span className="score-big">{selected.score}</span>
                     <span>баллов</span>
                   </div>
                   <div className="status-indicator-col">
                     <span>Решение:</span>
-                    <span className={`status-text-badge ${selectedSubmission.status}`}>
-                      {selectedSubmission.status === 'approved' ? 'Зачтено ИИ' : 'Требует доработки'}
+                    <span className={`status-text-badge ${selected.status}`}>
+                      {selected.status === 'approved' ? 'Зачтено ИИ' : selected.status === 'pending' ? 'На проверке' : 'Требует доработки'}
                     </span>
                   </div>
                 </div>
 
-                {/* Show Student Code */}
-                <div className="student-code-panels">
-                  <h5>Код решения:</h5>
-                  <div className="code-split-block">
-                    {selectedSubmission.code_html && (
-                      <div className="code-file-view">
-                        <span className="file-tag">index.html</span>
-                        <pre className="code-block"><code>{selectedSubmission.code_html}</code></pre>
+                {selected.payload?.criteria && selected.payload.criteria.length > 0 && (
+                  <div className="rubric-summary-block">
+                    <h5>Рубрика:</h5>
+                    {selected.payload.criteria.map((c, i) => (
+                      <div key={i} className={`rubric-row ${c.passed ? 'pass' : 'fail'}`}>
+                        <span>{c.passed ? '✓' : '✗'}</span>
+                        <span>{c.evidence}</span>
+                        {c.advice && <span className="rubric-advice">{c.advice}</span>}
                       </div>
-                    )}
-                    {selectedSubmission.code_css && (
-                      <div className="code-file-view">
-                        <span className="file-tag">styles.css</span>
-                        <pre className="code-block"><code>{selectedSubmission.code_css}</code></pre>
-                      </div>
-                    )}
-                    {selectedSubmission.code_js && (
-                      <div className="code-file-view">
-                        <span className="file-tag">main.js</span>
-                        <pre className="code-block"><code>{selectedSubmission.code_js}</code></pre>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Show Review Text */}
-                <div className="review-block-details">
-                  <h5>Отчет Gemini:</h5>
-                  <div className="review-markdown-box">
-                    {selectedSubmission.review_text.split('\n').map((line, idx) => (
-                      <p key={idx}>{line}</p>
                     ))}
                   </div>
-                </div>
+                )}
+
+                {selected.payload?.files && (
+                  <div className="student-code-panels">
+                    <h5>Код решения:</h5>
+                    <div className="code-split-block">
+                      {selected.payload.files.html && (
+                        <div className="code-file-view">
+                          <span className="file-tag">index.html</span>
+                          <pre className="code-block">
+                            <code>{selected.payload.files.html}</code>
+                          </pre>
+                        </div>
+                      )}
+                      {selected.payload.files.css && (
+                        <div className="code-file-view">
+                          <span className="file-tag">styles.css</span>
+                          <pre className="code-block">
+                            <code>{selected.payload.files.css}</code>
+                          </pre>
+                        </div>
+                      )}
+                      {selected.payload.files.js && (
+                        <div className="code-file-view">
+                          <span className="file-tag">app.js</span>
+                          <pre className="code-block">
+                            <code>{selected.payload.files.js}</code>
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selected.review_text && (
+                  <div className="review-block-details">
+                    <h5>Ревью Gemini:</h5>
+                    <div className="review-markdown-box">
+                      {selected.review_text.split('\n').map((line, i) => (
+                        <p key={i}>{line}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

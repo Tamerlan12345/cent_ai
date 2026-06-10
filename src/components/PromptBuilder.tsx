@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Copy, Check, Play, RefreshCw, MessageSquareCode, CheckCircle, AlertCircle } from 'lucide-react';
-import { supabase } from '../supabaseClient';
-import { reviewHomework } from '../lib/gemini';
+import { gradeSubmission } from '../lib/aiGateway';
+import type { GradeResult } from '../lib/aiGateway';
 import type { PracticeTask } from '../types';
 import './PromptBuilder.css';
 
@@ -27,11 +27,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
 
   const [copied, setCopied] = useState(false);
   const [simulating, setSimulating] = useState(false);
-  const [simulationResult, setSimulationResult] = useState<{
-    score: number;
-    comments: string[];
-    review_text: string;
-  } | null>(null);
+  const [simulationResult, setSimulationResult] = useState<GradeResult | null>(null);
 
   const combinedPrompt = `# ИНСТРУКЦИЯ ДЛЯ AI-АГЕНТА
 
@@ -71,32 +67,20 @@ ${dod || '[Не заполнено]'}`;
     setSimulationResult(null);
 
     try {
-      const data = await reviewHomework({
-        prompt_text: combinedPrompt,
-        practice_type: 'prompt',
-        week_title: weekTitle,
-        dod_criteria: practice.checklist,
+      const data = await gradeSubmission({
+        kind: 'prompt',
+        weekId,
+        weekTitle,
+        rubric: practice.checklist,
+        payload: { prompt: combinedPrompt },
+        staticResults: [],
+        functionalResults: [],
       });
 
       setSimulationResult(data);
-
-      await supabase.from('homeworks').insert({
-        student_id: studentId,
-        week_id: weekId,
-        code_html: combinedPrompt, // Store prompt in html column for simplicity
-        code_css: '',
-        code_js: '',
-        score: data.score,
-        review_text: data.review_text,
-        status: data.score >= 80 ? 'approved' : 'rejected',
-        submitted_at: new Date().toISOString(),
-      });
-
-      if (data.score >= 80) {
-        onHomeworkApproved();
-      }
+      if (data.score >= 80) onHomeworkApproved();
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Ошибка API';
+      const errMsg = err instanceof Error ? err.message : 'AI-шлюз недоступен';
       alert(`Ошибка проверки промпта: ${errMsg}`);
     } finally {
       setSimulating(false);

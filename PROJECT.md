@@ -37,6 +37,7 @@
 | 6 | Curriculum Expansion & Practice Routing | Feature | Completed | `src/content/courseData.ts`, `src/App.tsx`, `src/components/Navbar.tsx` | G1, G2, G3 | Expanded curriculum to 10 detailed modules, split practice UI based on type, updated week count in navbar |
 | 7 | Add generated AI illustrations & memes to curriculum slides | Feature | Completed | `src/types.ts`, `src/components/SlideDeck.tsx`, `src/components/SlideDeck.css`, `src/content/courseData.ts` | G1, G3 | Generated premium diagrams for vibe coding concept, prompt blueprint, and loop breaker, integrated them in slides and styled with glassmorphism CSS |
 | 8 | Adapt course to new 4-week vibe-coding guidebook | Feature | Completed | `src/content/courseData.ts`, `src/components/Navbar.tsx`, `src/components/TeacherDashboard.tsx`, `src/components/CodeEditor.tsx` | G1, G2, G3 | Replaced the 10-module curriculum with the new 4-week guidebook modules, updated slide data, dynamic progress in Navbar, and starter code templates in Monaco Editor. |
+| 9 | Research and specify platform architecture and roles | Research | Completed | `artifacts/vibe_coding_platform_spec.md` | G1, G2, G4 | Created a comprehensive specification including connected slide-sandbox architecture, pedagogical tools (Prompt Linter, Diff Auditor, Loop Breaker), and a 5-step Interactive Onboarding Tour with a hybrid LLM engine. |
 
 ## Known Issues & Technical Debt
 | Issue | Severity | Location | Impact on G1 / G3 / G4 | Owner | Plan |

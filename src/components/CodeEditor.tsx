@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { supabase } from '../supabaseClient';
-import { reviewHomework } from '../lib/gemini';
+import { gradeSubmission } from '../lib/aiGateway';
+import type { GradeResult } from '../lib/aiGateway';
 import { FileCode, Play, Send, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import './CodeEditor.css';
 
@@ -52,11 +52,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   
   const [activeTab, setActiveTab] = useState<'html' | 'css' | 'js'>('html');
   const [loadingReview, setLoadingReview] = useState(false);
-  const [reviewResult, setReviewResult] = useState<{
-    score: number;
-    comments: string[];
-    review_text: string;
-  } | null>(null);
+  const [reviewResult, setReviewResult] = useState<GradeResult | null>(null);
 
   // Helper to generate iframe contents
   const getPreviewHtml = (h: string, c: string, j: string) => {
@@ -126,33 +122,20 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     setReviewResult(null);
 
     try {
-      const data = await reviewHomework({
-        code_html: html,
-        code_css: css,
-        code_js: js,
-        week_title: weekTitle,
-        dod_criteria: dodCriteria,
+      const data = await gradeSubmission({
+        kind: 'code',
+        weekId,
+        weekTitle,
+        rubric: dodCriteria,
+        payload: { html, css, js },
+        staticResults: [],
+        functionalResults: [],
       });
 
       setReviewResult(data);
-
-      await supabase.from('homeworks').insert({
-        student_id: studentId,
-        week_id: weekId,
-        code_html: html,
-        code_css: css,
-        code_js: js,
-        score: data.score,
-        review_text: data.review_text,
-        status: data.score >= 80 ? 'approved' : 'rejected',
-        submitted_at: new Date().toISOString(),
-      });
-
-      if (data.score >= 80) {
-        onHomeworkApproved();
-      }
+      if (data.score >= 80) onHomeworkApproved();
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Gemini API недоступен';
+      const errMsg = err instanceof Error ? err.message : 'AI-шлюз недоступен';
       alert(`Ошибка проверки ИИ: ${errMsg}`);
     } finally {
       setLoadingReview(false);
