@@ -167,7 +167,7 @@ interface MockProfile {
 const mockSupabase = {
   auth: {
     signUp: async ({ email, password, options }: SignUpParams) => {
-      const profiles = getMockData('profiles') as MockProfile[];
+      const profiles = getMockData('profiles') as unknown as MockProfile[];
       if (profiles.some((p) => p.email === email)) {
         return {
           data: { user: null },
@@ -189,7 +189,7 @@ const mockSupabase = {
     },
 
     signInWithPassword: async ({ email, password }: SignInParams) => {
-      const profiles = getMockData('profiles') as MockProfile[];
+      const profiles = getMockData('profiles') as unknown as MockProfile[];
       const user = profiles.find((p) => p.email === email);
       if (!user) {
         return {

@@ -47,30 +47,32 @@ function App() {
 
   // Restore auth session
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      supabase
+    void (async () => {
+      const authRes = await supabase.auth.getUser() as { data: { user: UserProfile | null } };
+      if (!authRes.data.user) return;
+      const profileRes = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', data.user.id)
-        .single()
-        .then(({ data: profile }) => {
-          setUserProfile((profile as unknown as UserProfile) ?? (data.user as unknown as UserProfile));
-        });
-    });
+        .eq('id', authRes.data.user.id)
+        .single() as { data: UserProfile | null };
+      setUserProfile(profileRes.data ?? authRes.data.user);
+    })();
   }, []);
 
   // Fetch cohort active week
   useEffect(() => {
-    supabase
-      .from('cohorts')
-      .select('active_week')
-      .eq('id', 1)
-      .single()
-      .then(({ data }) => {
-        if (data) setActiveWeek(data.active_week);
-      })
-      .catch(() => {});
+    void (async () => {
+      try {
+        const res = await supabase
+          .from('cohorts')
+          .select('active_week')
+          .eq('id', 1)
+          .single() as { data: { active_week: number } | null };
+        if (res.data) setActiveWeek(res.data.active_week);
+      } catch {
+        /* cohort missing in demo mode is expected */
+      }
+    })();
   }, [userProfile?.id]);
 
   // Theme persistence
@@ -293,7 +295,6 @@ function App() {
                               key={selectedWeekId}
                               practice={activeModule.practice}
                               weekTitle={activeModule.title}
-                              studentId={userProfile.id || ''}
                               weekId={selectedWeekId}
                               onHomeworkApproved={() => handleCompleteWeek(selectedWeekId)}
                             />
@@ -303,7 +304,6 @@ function App() {
                               weekId={selectedWeekId}
                               weekTitle={activeModule.title}
                               dodCriteria={activeModule.practice.checklist}
-                              studentId={userProfile.id || ''}
                               onHomeworkApproved={() => handleCompleteWeek(selectedWeekId)}
                             />
                           )}

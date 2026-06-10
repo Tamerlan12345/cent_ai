@@ -8,7 +8,6 @@ import './PromptBuilder.css';
 interface PromptBuilderProps {
   practice: PracticeTask;
   weekTitle: string;
-  studentId: string;
   weekId: number;
   onHomeworkApproved: () => void;
 }
@@ -16,7 +15,6 @@ interface PromptBuilderProps {
 export const PromptBuilder: React.FC<PromptBuilderProps> = ({
   practice,
   weekTitle,
-  studentId,
   weekId,
   onHomeworkApproved,
 }) => {

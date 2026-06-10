@@ -9,7 +9,6 @@ interface CodeEditorProps {
   weekId: number;
   weekTitle: string;
   dodCriteria: string[];
-  studentId: string;
   onHomeworkApproved: () => void;
 }
 
@@ -41,7 +40,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   weekId,
   weekTitle,
   dodCriteria,
-  studentId,
   onHomeworkApproved,
 }) => {
   const defaultCodes = getStarterCodes(weekId);
