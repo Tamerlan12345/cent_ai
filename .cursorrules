@@ -1,0 +1,37 @@
+# .cursorrules — Centras CodeAI
+
+Правила для **Cursor IDE** (на случай, если работа идёт в Cursor вместо
+Antigravity). Дублирует `AGENTS.md` под формат Cursor.
+
+## Project
+LMS-платформа курса «Вайб-кодинг 2026» — React 19 + TypeScript + Vite + Supabase + Monaco.
+
+## Rules
+- Маленькие diff: один шаг — один файл — один коммит.
+- Russian-first: UI-тексты и контент курса — на русском.
+- Никаких новых npm-зависимостей без обсуждения.
+- Никаких секретов в коде. `.env` в `.gitignore`.
+- TypeScript strict, никаких `any` без причины.
+- Стили — через существующие CSS-переменные (`--accent-primary` и др.).
+- Контент курса — в `src/content/courseData.ts`, типы — в `src/types.ts`.
+- iframe-превью: только `sandbox="allow-scripts"`, без `allow-same-origin`.
+- Квоты и деплои — через `src/lib/sandboxStore.ts`, не напрямую в localStorage.
+
+## Architecture
+- `src/App.tsx` — маршруты приложения
+- `src/types.ts` — типы данных
+- `src/content/courseData.ts` — контент 4 недель
+- `src/lib/contentService.ts` — загрузка курса (Supabase ↔ bundled)
+- `src/lib/sandboxStore.ts` — квоты и /preview/:id (localStorage)
+- `src/components/CodeEditor.tsx` — Monaco-песочница
+
+## Commands
+- `npm run dev` — запуск dev-сервера
+- `npm run build` — сборка
+- `npm run lint` — линтер
+
+## Done criteria
+- `npm run build` без ошибок
+- `npm run lint` без warning-ов
+- Все маршруты открываются
+- Live Preview в Monaco без ошибок в консоли

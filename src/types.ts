@@ -79,12 +79,24 @@ export interface CourseModule {
   quiz: QuizQuestion[];
 }
 
+export type ResourceCategory =
+  | 'docs'
+  | 'tools'
+  | 'templates'
+  | 'articles'
+  | 'antigravity'
+  | 'agents'
+  | 'git'
+  | 'mcp'
+  | 'supabase'
+  | 'security';
+
 export interface ResourceLink {
   id: string;
   title: string;
   description: string;
   url: string;
-  category: 'docs' | 'tools' | 'templates' | 'articles';
+  category: ResourceCategory;
 }
 
 export interface UserProfile {
@@ -93,4 +105,35 @@ export interface UserProfile {
   role: 'student' | 'teacher' | 'admin';
   name: string;
   cohort_id: number;
+}
+
+/**
+ * Машинная квота, которую куратор/админ выделяет ученику.
+ * Сервер у проекта один и без Docker — ресурсы делим административно.
+ * Эти значения отображаются ученику как «системные ограничения песочницы».
+ */
+export interface ResourceQuota {
+  studentId: string;
+  studentName: string;
+  ramMb: number;        // например 512
+  cpuPercent: number;   // например 25
+  maxDeploys: number;   // сколько «деплоев» в платформе разрешено
+  maxRunSeconds: number; // лимит на превью-сессию
+  notes?: string;
+}
+
+/**
+ * Внутренний «деплой» — сохранённый снапшот MVP ученика,
+ * который можно открыть по ссылке /preview/:id внутри платформы.
+ * Подменяет внешний хостинг во время обучения.
+ */
+export interface DeployedSnapshot {
+  id: string;
+  studentId: string;
+  projectName: string;
+  html: string;
+  css: string;
+  js: string;
+  createdAt: string;
+  weekId?: number;
 }

@@ -12,6 +12,7 @@ import { CodeEditor } from './components/CodeEditor';
 import { PromptBuilder } from './components/PromptBuilder';
 import { TeacherDashboard } from './components/TeacherDashboard';
 import { TourPage } from './components/tour/TourPage';
+import { DeployPreview } from './components/DeployPreview';
 import { supabase } from './supabaseClient';
 import { loadCourseModules } from './lib/contentService';
 import { loadProgress, saveWeekCompleted, saveChecklistItem } from './lib/progressService';
@@ -153,6 +154,9 @@ function App() {
 
           {/* ── Interactive Onboarding Tour ── */}
           <Route path="/tour" element={<TourPage userProfile={userProfile} />} />
+
+          {/* ── Внутренний деплой курса (вместо внешнего хостинга) ── */}
+          <Route path="/preview/:id" element={<DeployPreview />} />
 
           {/* ── Program overview ── */}
           <Route
@@ -305,6 +309,7 @@ function App() {
                               weekTitle={activeModule.title}
                               dodCriteria={activeModule.practice.checklist}
                               onHomeworkApproved={() => handleCompleteWeek(selectedWeekId)}
+                              userProfile={userProfile}
                             />
                           )}
                         </div>

@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Users, FileText, Calendar } from 'lucide-react';
+import { Users, FileText, Calendar, Cpu, HardDrive, Rocket, Save, Trash2 } from 'lucide-react';
+import {
+  defaultQuotaTemplate,
+  getQuotaForStudent,
+  listDeploymentsForStudent,
+  deleteDeployment,
+  upsertQuota,
+} from '../lib/sandboxStore';
+import type { ResourceQuota, DeployedSnapshot } from '../types';
 import './TeacherDashboard.css';
 
 interface StudentProfile {
@@ -36,6 +44,11 @@ export const TeacherDashboard: React.FC = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [selected, setSelected] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Управление ресурсами: квоты + список деплоев на выбранного ученика
+  const [quotaStudentId, setQuotaStudentId] = useState<string>('');
+  const [quotaDraft, setQuotaDraft] = useState<ResourceQuota | null>(null);
+  const [studentDeployments, setStudentDeployments] = useState<DeployedSnapshot[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -77,6 +90,39 @@ export const TeacherDashboard: React.FC = () => {
     }
   };
 
+  const handleSelectQuotaStudent = (id: string) => {
+    setQuotaStudentId(id);
+    if (!id) {
+      setQuotaDraft(null);
+      setStudentDeployments([]);
+      return;
+    }
+    const student = students.find((s) => s.id === id);
+    setQuotaDraft(getQuotaForStudent(id, student?.name ?? 'Студент'));
+    setStudentDeployments(listDeploymentsForStudent(id));
+  };
+
+  function handleQuotaFieldChange<K extends keyof ResourceQuota>(field: K, value: ResourceQuota[K]) {
+    setQuotaDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
+  }
+
+  const handleSaveQuota = () => {
+    if (!quotaDraft) return;
+    upsertQuota(quotaDraft);
+    alert(`Квота для «${quotaDraft.studentName}» обновлена.`);
+  };
+
+  const handleResetQuotaToDefault = () => {
+    if (!quotaDraft) return;
+    setQuotaDraft({ ...quotaDraft, ...defaultQuotaTemplate() });
+  };
+
+  const handleDeleteStudentDeployment = (id: string) => {
+    if (!window.confirm('Удалить этот /preview/:id? Действие необратимо.')) return;
+    deleteDeployment(id);
+    setStudentDeployments((prev) => prev.filter((d) => d.id !== id));
+  };
+
   return (
     <section className="teacher-dashboard-section">
       <div className="dashboard-header-block">
@@ -112,6 +158,138 @@ export const TeacherDashboard: React.FC = () => {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="dashboard-card glass-panel quotas-card">
+            <div className="card-header-iconified">
+              <Cpu className="card-header-icon" />
+              <h3>Машинные квоты</h3>
+            </div>
+            <p className="control-card-text">
+              Сервер платформы один и без Docker — лимиты RAM/CPU и количество
+              внутренних деплоев на ученика раздаём административно. Изменения
+              сразу видны ученикам в плашке «Системные ограничения песочницы».
+            </p>
+
+            <label className="quota-field-label">
+              Студент
+              <select
+                value={quotaStudentId}
+                onChange={(e) => handleSelectQuotaStudent(e.target.value)}
+                className="week-select-dropdown"
+              >
+                <option value="">— выберите —</option>
+                {students.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.email})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {quotaDraft && (
+              <div className="quota-editor">
+                <div className="quota-grid">
+                  <label className="quota-field-label">
+                    <HardDrive size={12} /> RAM (МБ)
+                    <input
+                      type="number"
+                      min={128}
+                      max={4096}
+                      step={64}
+                      value={quotaDraft.ramMb}
+                      onChange={(e) => handleQuotaFieldChange('ramMb', Number(e.target.value))}
+                      className="quota-input"
+                    />
+                  </label>
+                  <label className="quota-field-label">
+                    <Cpu size={12} /> CPU (%)
+                    <input
+                      type="number"
+                      min={5}
+                      max={100}
+                      step={5}
+                      value={quotaDraft.cpuPercent}
+                      onChange={(e) => handleQuotaFieldChange('cpuPercent', Number(e.target.value))}
+                      className="quota-input"
+                    />
+                  </label>
+                  <label className="quota-field-label">
+                    <Rocket size={12} /> Макс. деплоев
+                    <input
+                      type="number"
+                      min={1}
+                      max={20}
+                      step={1}
+                      value={quotaDraft.maxDeploys}
+                      onChange={(e) => handleQuotaFieldChange('maxDeploys', Number(e.target.value))}
+                      className="quota-input"
+                    />
+                  </label>
+                  <label className="quota-field-label">
+                    ⏱ Сессия превью (сек)
+                    <input
+                      type="number"
+                      min={60}
+                      max={1800}
+                      step={30}
+                      value={quotaDraft.maxRunSeconds}
+                      onChange={(e) => handleQuotaFieldChange('maxRunSeconds', Number(e.target.value))}
+                      className="quota-input"
+                    />
+                  </label>
+                </div>
+                <label className="quota-field-label">
+                  Заметка для ученика
+                  <textarea
+                    rows={2}
+                    value={quotaDraft.notes ?? ''}
+                    onChange={(e) => handleQuotaFieldChange('notes', e.target.value)}
+                    className="quota-input quota-textarea"
+                    placeholder="Появится в подсказке у плашки лимитов"
+                  />
+                </label>
+
+                <div className="quota-actions">
+                  <button onClick={handleSaveQuota} className="btn btn-primary btn-sm">
+                    <Save size={12} /> Сохранить квоту
+                  </button>
+                  <button onClick={handleResetQuotaToDefault} className="btn btn-secondary btn-sm">
+                    Сбросить к дефолту
+                  </button>
+                </div>
+
+                {studentDeployments.length > 0 && (
+                  <div className="student-deployments">
+                    <h5>Активные внутренние деплои ({studentDeployments.length})</h5>
+                    <ul>
+                      {studentDeployments.map((d) => (
+                        <li key={d.id}>
+                          <a
+                            href={`/preview/${d.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="deploy-link"
+                          >
+                            {d.projectName}
+                          </a>
+                          <span className="deploy-date">
+                            {new Date(d.createdAt).toLocaleDateString('ru-RU')}
+                          </span>
+                          <button
+                            onClick={() => handleDeleteStudentDeployment(d.id)}
+                            className="btn btn-secondary btn-sm"
+                            title="Удалить деплой"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="dashboard-card glass-panel students-card">
