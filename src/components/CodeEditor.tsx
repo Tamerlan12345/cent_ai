@@ -1,9 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { gradeSubmission } from '../lib/aiGateway';
 import type { GradeResult } from '../lib/aiGateway';
-import { FileCode, Play, Send, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { FileCode, Play, Send, CheckCircle, AlertCircle, RefreshCw, History, Copy, BookOpen, MessageSquareWarning } from 'lucide-react';
 import './CodeEditor.css';
+
+interface Snapshot {
+  id: number;
+  timestamp: string;
+  html: string;
+  css: string;
+  js: string;
+}
+
+const CHEAT_SHEET_TEMPLATES = [
+  { title: "Поиск ошибки", text: "У меня возникает следующая ошибка: [ВСТАВИТЬ ОШИБКУ]. Объясни простым языком, почему она происходит, и как мне её исправить." },
+  { title: "Добавление стиля", text: "Добавь CSS стили для [ЭЛЕМЕНТ], чтобы он выглядел современно: используй скругленные углы и градиентный фон." },
+  { title: "Адаптивность", text: "Сделай эту страницу адаптивной для мобильных устройств. Используй flexbox или grid, чтобы колонки перестраивались." },
+  { title: "Объясни код", text: "Объясни мне этот фрагмент кода строка за строкой, как будто я новичок: [ВСТАВИТЬ КОД]." },
+];
 
 interface CodeEditorProps {
   weekId: number;
@@ -51,6 +66,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const [activeTab, setActiveTab] = useState<'html' | 'css' | 'js'>('html');
   const [loadingReview, setLoadingReview] = useState(false);
   const [reviewResult, setReviewResult] = useState<GradeResult | null>(null);
+  
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const [showCheatSheet, setShowCheatSheet] = useState(false);
+  const [iframeError, setIframeError] = useState<string | null>(null);
 
   // Helper to generate iframe contents
   const getPreviewHtml = (h: string, c: string, j: string) => {
@@ -63,6 +82,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             body { margin: 0; padding: 1rem; background: #0A0E17; color: #E2E8F0; font-family: system-ui, sans-serif; }
             ${c}
           </style>
+          <script>
+            window.onerror = function(message, source, lineno, colno, error) {
+              window.parent.postMessage({ type: 'IFRAME_ERROR', message: message }, '*');
+              return false;
+            };
+            const originalConsoleError = console.error;
+            console.error = function(...args) {
+              window.parent.postMessage({ type: 'IFRAME_ERROR', message: args.join(' ') }, '*');
+              originalConsoleError.apply(console, args);
+            };
+          </script>
         </head>
         <body>
           ${h}
@@ -71,6 +101,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               ${j}
             } catch (err) {
               const msg = err instanceof Error ? err.message : String(err);
+              window.parent.postMessage({ type: 'IFRAME_ERROR', message: msg }, '*');
               document.body.innerHTML += '<div style="color:#EF4444; background:rgba(239,68,68,0.1); padding:1rem; border-radius:6px; margin-top:1rem; border:1px solid rgba(239,68,68,0.2)">Ошибка выполнения скрипта: ' + msg + '</div>';
             }
           </script>
@@ -85,6 +116,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
   // Compile on manual run button
   const handleRunCode = () => {
+    setIframeError(null);
     setPreviewDoc(getPreviewHtml(html, css, js));
   };
 
@@ -93,6 +125,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
   const handleEditorChange = (value: string | undefined) => {
     const val = value || '';
+    setIframeError(null);
     if (activeTab === 'html') {
       setHtml(val);
       setPreviewDoc(getPreviewHtml(val, css, js));
@@ -102,6 +135,35 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     } else {
       setJs(val);
       setPreviewDoc(getPreviewHtml(html, css, val));
+    }
+  };
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'IFRAME_ERROR') {
+        setIframeError(event.data.message);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  const handleCreateSnapshot = () => {
+    const newSnapshot: Snapshot = {
+      id: Date.now(),
+      timestamp: new Date().toLocaleTimeString(),
+      html, css, js
+    };
+    setSnapshots([newSnapshot, ...snapshots]);
+  };
+
+  const handleRevertSnapshot = (snap: Snapshot) => {
+    if (window.confirm(`Откатиться к версии от ${snap.timestamp}?`)) {
+      setHtml(snap.html);
+      setCss(snap.css);
+      setJs(snap.js);
+      setIframeError(null);
+      setPreviewDoc(getPreviewHtml(snap.html, snap.css, snap.js));
     }
   };
 
@@ -169,6 +231,31 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             </div>
 
             <div className="editor-controls">
+              <div className="snapshot-controls" style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', marginRight: '0.5rem' }}>
+                <button onClick={handleCreateSnapshot} className="btn btn-secondary btn-sm" title="Снапшот (Commit)">
+                  <History size={12} /> Снапшот
+                </button>
+                {snapshots.length > 0 && (
+                  <select 
+                    className="snapshot-dropdown"
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const snap = snapshots.find(s => s.id === Number(e.target.value));
+                        if (snap) handleRevertSnapshot(snap);
+                        e.target.value = "";
+                      }
+                    }}
+                  >
+                    <option value="">Откат...</option>
+                    {snapshots.map(s => (
+                      <option key={s.id} value={s.id}>{s.timestamp}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <button onClick={() => setShowCheatSheet(!showCheatSheet)} className={`btn btn-sm ${showCheatSheet ? 'btn-primary' : 'btn-secondary'}`} title="Шпаргалка промптов">
+                <BookOpen size={12} />
+              </button>
               <button onClick={handleResetTemplate} className="btn btn-secondary btn-sm" title="Сбросить код">
                 <RefreshCw size={12} />
               </button>
@@ -195,6 +282,60 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                 automaticLayout: true,
               }}
             />
+
+            {/* Error Analyzer Panel */}
+            {iframeError && (
+              <div className="error-analyzer-panel animate-fade-in">
+                <div className="error-header">
+                  <div style={{display:'flex', alignItems:'center', gap:'0.5rem'}}>
+                    <MessageSquareWarning size={16} />
+                    <strong>Анализатор ошибок</strong>
+                  </div>
+                  <button className="close-btn" onClick={() => setIframeError(null)}>&times;</button>
+                </div>
+                <div className="error-body">
+                  <p className="error-text"><code>{iframeError}</code></p>
+                  <p className="suggestion-text">Спросите ИИ как это исправить:</p>
+                  <div className="prompt-suggestion">
+                    <code>Помоги исправить эту ошибку: "{iframeError}". Объясни шаг за шагом, что пошло не так.</code>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(`Помоги исправить эту ошибку: "${iframeError}". Объясни шаг за шагом, что пошло не так.`)}
+                      className="copy-btn"
+                      title="Скопировать промпт"
+                    >
+                      <Copy size={14} /> Копировать
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Cheat Sheet Sidebar */}
+            {showCheatSheet && (
+              <div className="cheat-sheet-panel animate-slide-in">
+                <div className="cheat-sheet-header">
+                  <h5>Шпаргалка Промптов</h5>
+                  <button onClick={() => setShowCheatSheet(false)} className="close-btn">&times;</button>
+                </div>
+                <div className="cheat-sheet-list">
+                  {CHEAT_SHEET_TEMPLATES.map((tmpl, idx) => (
+                    <div key={idx} className="cheat-template">
+                      <div className="cheat-template-title">{tmpl.title}</div>
+                      <div className="cheat-template-body">
+                        <span className="tmpl-text">{tmpl.text}</span>
+                        <button 
+                          onClick={() => navigator.clipboard.writeText(tmpl.text)}
+                          className="copy-btn"
+                          title="Скопировать шаблон"
+                        >
+                          <Copy size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
