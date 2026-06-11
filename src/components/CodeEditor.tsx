@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { useNavigate } from 'react-router-dom';
 import { gradeSubmission } from '../lib/aiGateway';
 import type { GradeResult } from '../lib/aiGateway';
+import { runStaticChecks } from '../lib/grading';
+import type { CheckResult, FunctionalTest, SandboxFiles } from '../lib/grading';
+import { buildSandboxDoc, runFunctionalTests, useSandboxConsole } from '../lib/consoleBridge';
 import {
   FileCode,
   Play,
@@ -28,7 +31,7 @@ import {
   getQuotaForStudent,
   listDeploymentsForStudent,
 } from '../lib/sandboxStore';
-import type { UserProfile } from '../types';
+import type { MissionCheck, PracticeMission, SandboxStarter, UserProfile } from '../types';
 
 interface Snapshot {
   id: number;
@@ -90,6 +93,10 @@ interface CodeEditorProps {
   dodCriteria: string[];
   onHomeworkApproved: () => void;
   userProfile?: UserProfile | null;
+  initialFiles?: SandboxStarter;
+  mission?: PracticeMission;
+  onMissionCheckResults?: (results: CheckResult[]) => void;
+  onMissionPassed?: () => void;
 }
 
 // Starter templates for Monaco Editor per week
@@ -158,14 +165,71 @@ const AGENT_PLANS: { id: string; title: string; steps: AgentStep[] }[] = [
   },
 ];
 
+const missionFiles = (html: string, css: string, js: string): SandboxFiles => ({ html, css, js });
+
+function compilePattern(pattern: string): RegExp | null {
+  try {
+    return new RegExp(pattern, 'm');
+  } catch {
+    return null;
+  }
+}
+
+function runMissionStaticChecks(files: SandboxFiles, checks: MissionCheck[]): CheckResult[] {
+  const baseResults = runStaticChecks(files, {});
+  const doc = new DOMParser().parseFromString(files.html, 'text/html');
+  const missionResults: CheckResult[] = [];
+
+  for (const check of checks) {
+    if (check.kind === 'selector') {
+      const selector = check.selector ?? '';
+      const found = selector ? !!doc.querySelector(selector) : false;
+      missionResults.push({
+        id: check.id,
+        label: check.label,
+        passed: found,
+        detail: found ? undefined : check.failHint,
+      });
+    }
+
+    if (check.kind === 'js-pattern' || check.kind === 'css-pattern') {
+      const pattern = check.pattern ? compilePattern(check.pattern) : null;
+      const source = check.kind === 'js-pattern' ? files.js : files.css;
+      const passed = pattern ? pattern.test(source) : false;
+      missionResults.push({
+        id: check.id,
+        label: check.label,
+        passed,
+        detail: passed ? undefined : check.failHint,
+      });
+    }
+  }
+
+  return [...baseResults, ...missionResults];
+}
+
+function getMissionFunctionalTests(checks: MissionCheck[]): FunctionalTest[] {
+  return checks
+    .filter((check) => check.kind === 'functional')
+    .map((check) => ({
+      id: check.id,
+      label: check.label,
+      script: check.script ?? 'return false;',
+    }));
+}
+
 export const CodeEditor: React.FC<CodeEditorProps> = ({
   weekId,
   weekTitle,
   dodCriteria,
   onHomeworkApproved,
   userProfile,
+  initialFiles,
+  mission,
+  onMissionCheckResults,
+  onMissionPassed,
 }) => {
-  const defaultCodes = getStarterCodes(weekId);
+  const defaultCodes = initialFiles ?? getStarterCodes(weekId);
   const navigate = useNavigate();
 
   const [html, setHtml] = useState(defaultCodes.html);
@@ -179,6 +243,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [showCheatSheet, setShowCheatSheet] = useState(false);
   const [iframeError, setIframeError] = useState<string | null>(null);
+  const [missionCheckResults, setMissionCheckResults] = useState<CheckResult[]>([]);
+  const [checkingMission, setCheckingMission] = useState(false);
 
   // Antigravity-like Agent Manager simulation
   const [agentOpen, setAgentOpen] = useState(false);
@@ -196,6 +262,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   );
 
   const planTimerRef = useRef<number | null>(null);
+  const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
+  const bridgeId = useMemo(
+    () => `code-editor-${weekId}-${mission?.id ?? 'classic'}`,
+    [weekId, mission?.id],
+  );
+  const sandboxConsole = useSandboxConsole(bridgeId);
 
   // Helper to generate iframe contents
   const getPreviewHtml = (h: string, c: string, j: string) => {
@@ -236,31 +308,39 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     `;
   };
 
+  const getPreviewDoc = (h: string, c: string, j: string) =>
+    mission ? buildSandboxDoc(missionFiles(h, c, j), bridgeId) : getPreviewHtml(h, c, j);
+
   const [previewDoc, setPreviewDoc] = useState(() =>
-    getPreviewHtml(defaultCodes.html, defaultCodes.css, defaultCodes.js),
+    getPreviewDoc(defaultCodes.html, defaultCodes.css, defaultCodes.js),
   );
 
   // Compile on manual run button
   const handleRunCode = () => {
     setIframeError(null);
-    setPreviewDoc(getPreviewHtml(html, css, js));
+    sandboxConsole.clear();
+    setPreviewDoc(getPreviewDoc(html, css, js));
   };
 
   const activeCode = activeTab === 'html' ? html : activeTab === 'css' ? css : js;
   const activeLanguage = activeTab === 'html' ? 'html' : activeTab === 'css' ? 'css' : 'javascript';
+  const latestSandboxError = sandboxConsole.errors.length
+    ? sandboxConsole.errors[sandboxConsole.errors.length - 1].text
+    : null;
 
   const handleEditorChange = (value: string | undefined) => {
     const val = value || '';
     setIframeError(null);
+    setMissionCheckResults([]);
     if (activeTab === 'html') {
       setHtml(val);
-      setPreviewDoc(getPreviewHtml(val, css, js));
+      setPreviewDoc(getPreviewDoc(val, css, js));
     } else if (activeTab === 'css') {
       setCss(val);
-      setPreviewDoc(getPreviewHtml(html, val, js));
+      setPreviewDoc(getPreviewDoc(html, val, js));
     } else {
       setJs(val);
-      setPreviewDoc(getPreviewHtml(html, css, val));
+      setPreviewDoc(getPreviewDoc(html, css, val));
     }
   };
 
@@ -273,6 +353,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  useEffect(() => {
+    if (mission && latestSandboxError) setIframeError(latestSandboxError);
+  }, [mission, latestSandboxError]);
 
   useEffect(() => {
     return () => {
@@ -312,17 +396,65 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       setCss(snap.css);
       setJs(snap.js);
       setIframeError(null);
-      setPreviewDoc(getPreviewHtml(snap.html, snap.css, snap.js));
+      setMissionCheckResults([]);
+      sandboxConsole.clear();
+      setPreviewDoc(getPreviewDoc(snap.html, snap.css, snap.js));
     }
   };
 
   const handleResetTemplate = () => {
     if (window.confirm('Сбросить код к исходному шаблону задания?')) {
-      const codes = getStarterCodes(weekId);
+      const codes = initialFiles ?? getStarterCodes(weekId);
       setHtml(codes.html);
       setCss(codes.css);
       setJs(codes.js);
-      setPreviewDoc(getPreviewHtml(codes.html, codes.css, codes.js));
+      setIframeError(null);
+      setMissionCheckResults([]);
+      sandboxConsole.clear();
+      setPreviewDoc(getPreviewDoc(codes.html, codes.css, codes.js));
+    }
+  };
+
+  const runCurrentChecks = async () => {
+    const files = missionFiles(html, css, js);
+    const staticResults = mission
+      ? runMissionStaticChecks(files, mission.checks)
+      : runStaticChecks(files, {});
+    const functionalTests = mission ? getMissionFunctionalTests(mission.checks) : [];
+    let functionalResults: CheckResult[] = [];
+
+    if (functionalTests.length > 0) {
+      sandboxConsole.clear();
+      setIframeError(null);
+      setPreviewDoc(getPreviewDoc(html, css, js));
+      await new Promise((resolve) => window.setTimeout(resolve, 300));
+      functionalResults = await runFunctionalTests(previewFrameRef.current, bridgeId, functionalTests);
+    }
+
+    return { staticResults, functionalResults };
+  };
+
+  const handleRunMissionChecks = async () => {
+    if (!mission) return;
+
+    setCheckingMission(true);
+    try {
+      const { staticResults, functionalResults } = await runCurrentChecks();
+      const allResults = [...staticResults, ...functionalResults];
+      const requiredIds = new Set(mission.checks.filter((check) => check.required).map((check) => check.id));
+      const blockingResults = allResults.filter(
+        (result) =>
+          result.id === 'html-parses' ||
+          result.id === 'js-parses' ||
+          requiredIds.has(result.id),
+      );
+      const passed = blockingResults.length > 0 && blockingResults.every((result) => result.passed);
+
+      setMissionCheckResults(allResults);
+      onMissionCheckResults?.(allResults);
+      if (passed) onMissionPassed?.();
+    } finally {
+      setCheckingMission(false);
     }
   };
 
@@ -331,14 +463,20 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     setReviewResult(null);
 
     try {
+      const { staticResults, functionalResults } = await runCurrentChecks();
+      const allResults = [...staticResults, ...functionalResults];
+      if (mission) {
+        setMissionCheckResults(allResults);
+        onMissionCheckResults?.(allResults);
+      }
       const data = await gradeSubmission({
         kind: 'code',
         weekId,
         weekTitle,
         rubric: dodCriteria,
         payload: { html, css, js },
-        staticResults: [],
-        functionalResults: [],
+        staticResults,
+        functionalResults,
       });
 
       setReviewResult(data);
@@ -431,6 +569,45 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           </div>
         </div>
       </div>
+
+      {mission && (
+        <div className="mission-check-panel glass-panel">
+          <div className="mission-check-header">
+            <div>
+              <span className="mission-check-eyebrow">Mission checks</span>
+              <h4>{mission.title}</h4>
+            </div>
+            <button
+              onClick={handleRunMissionChecks}
+              disabled={checkingMission}
+              className="btn btn-primary btn-sm"
+            >
+              {checkingMission ? 'Проверяю...' : 'Проверить миссию'}
+            </button>
+          </div>
+
+          {missionCheckResults.length > 0 ? (
+            <div className="mission-check-grid">
+              {missionCheckResults.map((result) => (
+                <div
+                  key={result.id}
+                  className={`mission-check-row ${result.passed ? 'passed' : 'failed'}`}
+                >
+                  {result.passed ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                  <div>
+                    <span>{result.label}</span>
+                    {result.detail && <small>{result.detail}</small>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mission-check-empty">
+              Запустите проверку после правки кода. Сначала идут быстрые проверки файлов, затем сценарий в Live Preview.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Editor & Preview Split Workspace */}
       <div className="ide-workspace-split">
@@ -673,6 +850,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           </div>
           <div className="iframe-wrapper">
             <iframe
+              ref={previewFrameRef}
               srcDoc={previewDoc}
               title="Live Code Preview"
               sandbox="allow-scripts"
@@ -692,6 +870,16 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {mission && (
+            <button
+              onClick={handleRunMissionChecks}
+              disabled={checkingMission}
+              className="btn btn-secondary"
+              title="Запустить автопроверки текущей миссии"
+            >
+              <CheckCircle2 size={16} /> {checkingMission ? 'Проверяю...' : 'Проверить миссию'}
+            </button>
+          )}
           <button onClick={handleInternalDeploy} className="btn btn-secondary" title="Сохранить и открыть /preview/:id">
             <Rocket size={16} /> Опубликовать в песочнице
           </button>

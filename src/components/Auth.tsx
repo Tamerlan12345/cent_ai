@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase, isRealSupabaseConfigured } from '../supabaseClient';
-import { GraduationCap, Mail, Lock, User, ShieldCheck } from 'lucide-react';
+import { GraduationCap, Mail, Lock, User } from 'lucide-react';
 import type { UserProfile } from '../types';
 import './Auth.css';
 
@@ -13,7 +13,7 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'student' | 'teacher'>('student');
+  const role: 'student' | 'teacher' = 'student';
   
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -149,33 +149,7 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
             />
           </div>
 
-          {isSignUp && (
-            <div className="auth-input-group">
-              <label><ShieldCheck size={14} /> Роль в системе</label>
-              <div className="role-selector-radios">
-                <label className={role === 'student' ? 'active' : ''}>
-                  <input
-                    type="radio"
-                    name="role"
-                    value="student"
-                    checked={role === 'student'}
-                    onChange={() => setRole('student')}
-                  />
-                  Студент
-                </label>
-                <label className={role === 'teacher' ? 'active' : ''}>
-                  <input
-                    type="radio"
-                    name="role"
-                    value="teacher"
-                    checked={role === 'teacher'}
-                    onChange={() => setRole('teacher')}
-                  />
-                  Куратор
-                </label>
-              </div>
-            </div>
-          )}
+          {/* Роль 'student' назначается автоматически при регистрации, выбор скрыт в целях безопасности */}
 
           <button type="submit" disabled={loading} className="btn btn-primary auth-submit-btn">
             {loading ? 'Загрузка...' : isSignUp ? 'Зарегистрироваться' : 'Войти в личный кабинет'}

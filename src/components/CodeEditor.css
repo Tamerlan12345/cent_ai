@@ -61,6 +61,92 @@
   font-size: 0.85rem;
 }
 
+/* Mission checks */
+.mission-check-panel {
+  padding: 1rem;
+  background: var(--bg-card);
+  border-left: 3px solid var(--accent-primary);
+}
+
+.mission-check-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.mission-check-eyebrow {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.mission-check-header h4 {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.mission-check-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.5rem;
+}
+
+.mission-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  min-height: 48px;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.78rem;
+}
+
+[data-theme='light'] .mission-check-row {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.mission-check-row.passed {
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--accent-success);
+}
+
+.mission-check-row.failed {
+  border-color: rgba(239, 68, 68, 0.25);
+  color: var(--accent-error);
+}
+
+.mission-check-row div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mission-check-row span {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.mission-check-row small {
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.mission-check-empty {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
 /* Antigravity-style Agent Manager simulation panel */
 .agent-manager-panel {
   position: absolute;

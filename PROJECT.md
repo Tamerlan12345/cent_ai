@@ -39,7 +39,7 @@
 | 8 | Adapt course to new 4-week vibe-coding guidebook | Feature | Completed | `src/content/courseData.ts`, `src/components/Navbar.tsx`, `src/components/TeacherDashboard.tsx`, `src/components/CodeEditor.tsx` | G1, G2, G3 | Replaced the 10-module curriculum with the new 4-week guidebook modules, updated slide data, dynamic progress in Navbar, and starter code templates in Monaco Editor. |
 | 9 | Research and specify platform architecture and roles | Research | Completed | `artifacts/vibe_coding_platform_spec.md` | G1, G2, G4 | Created a comprehensive specification including connected slide-sandbox architecture, pedagogical tools (Prompt Linter, Diff Auditor, Loop Breaker), and a 5-step Interactive Onboarding Tour with a hybrid LLM engine. |
 | 10 | Implement Vibe-Coding Editor Upgrades for Non-Programmers | Feature | Completed | `src/components/CodeEditor.tsx`, `src/components/CodeEditor.css` | G1, G2, G3 | Added Error Analyzer (capturing iframe errors via postMessage), Cheat Sheet Panel, and Snapshot (Time Machine) history. |
-
+| 11 | Build Mission Workspace & Security Patch | Feature/Fix | Completed | `src/App.tsx`, `src/components/PracticeMissionRunner.tsx`, `src/components/Auth.tsx`, `src/content/courseData.ts`, `supabase/migrations/20260611000000_mission_artifacts_and_security.sql` | G1, G2, G3, G4 | Hooked up `PracticeMissionRunner` into the main app shell, removed role selector on signup, locked down roles in Supabase via trigger, added `learning_artifacts` schema, and populated real end-to-end missions in `courseData.ts` (Week 3). |
 ## Known Issues & Technical Debt
 | Issue | Severity | Location | Impact on G1 / G3 / G4 | Owner | Plan |
 |-------|----------|----------|------------------------|-------|------|

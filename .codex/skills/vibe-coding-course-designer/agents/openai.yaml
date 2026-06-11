@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vibe Coding Course Designer"
+  short_description: "Design interactive vibe-coding learning flows"
+  default_prompt: "Use $vibe-coding-course-designer to design an interactive beginner-friendly vibe-coding curriculum and practice flow."

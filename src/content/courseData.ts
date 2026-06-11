@@ -1464,49 +1464,108 @@ try {
     ],
     practice: {
       id: 'p3',
-      title: 'Сборка MVP в Monaco-песочнице с симуляцией Antigravity workflow',
+      title: 'Интерактивные миссии: Кликер и MVP Трекера',
       type: 'code',
+      mode: 'mission',
       durationMinutes: 90,
-      description:
-        'Соберите рабочий трекер привычек прямо в Monaco-песочнице. Используйте снапшоты как Git, делайте внутренние деплои, читайте diff и валидируйте артефакты — как делали бы это в Antigravity Manager.',
+      description: 'Соберите рабочий трекер привычек прямо в Monaco-песочнице через интерактивные миссии.',
       steps: [
-        'В index.html соберите семантическую разметку: header, форма добавления, контейнер списка.',
-        'В styles.css задайте CSS-переменные в :root, оформите тёмную тему, hover-эффекты, скруглённые карточки.',
-        'В main.js напишите массив habits, функцию renderHabits(), обработчик submit с валидацией.',
-        'Добавьте сохранение и загрузку из LocalStorage в отдельный микро-шаг.',
-        'Сделайте 5 снапшотов: разметка, стили, рендер, добавление, LocalStorage.',
-        'Опубликуйте текущую версию через «внутренний деплой» — получите ссылку /preview/:id.',
+        'Пройдите миссию "Кликер монет", чтобы освоиться в редакторе.',
+        'Соберите MVP трекера привычек микро-шагами.'
       ],
-      expectedOutput: 'Рабочий MVP с тремя файлами, снапшотами и внутренним деплоем.',
+      expectedOutput: 'Пройденные миссии и рабочий MVP.',
       initialPrompt: {
         goal: 'Собери MVP трекера привычек микро-шагами',
-        context: 'Стек: HTML/CSS/JS + LocalStorage. AGENTS.md и Project Brief лежат в репо.',
-        constraints: 'Без фреймворков. Маленькие diff. Снапшот после каждого шага.',
-        dod: 'Превью работает без ошибок, LocalStorage сохраняет, 5 снапшотов, 1 внутренний деплой.',
+        context: 'Стек: HTML/CSS/JS + LocalStorage.',
+        constraints: 'Без фреймворков. Снапшот после каждого шага.',
+        dod: 'Превью работает без ошибок.'
       },
       hints: [
-        'Если превью не обновилось — нажмите «Запуск». Иногда кэш браузера мешает.',
-        'Перед рискованной правкой делайте снапшот — откатиться займёт 5 секунд.',
-        'Для генерации id используйте Date.now(). Просто и достаточно для MVP.',
-      ],
-      checklist: [
-        'HTML содержит семантическую структуру и форму с id habit-form',
-        'CSS использует переменные в :root и hover-эффекты',
-        'JS реализует валидацию (пустое и > 50 символов отклоняются)',
-        'Данные сохраняются и читаются из LocalStorage',
-        'Сделано минимум 5 снапшотов',
-        'Создан минимум один внутренний деплой /preview/:id',
+        'Используйте снапшоты перед сложными изменениями.'
       ],
       simulationFeedback: {
         score: 100,
-        comments: [
-          'Сборка по микро-шагам — образцовая. Снапшоты делались вовремя.',
-          'CSS-переменные использованы, валидация на месте, LocalStorage работает.',
-          'Внутренний деплой создан — можно показать куратору ссылкой.',
-        ],
-        agentResponse:
-          'Артефакт зарегистрирован: 3 файла, 5 снапшотов, превью без ошибок в консоли. Внутренний деплой опубликован. Можно идти на четвёртую неделю.',
+        comments: ['Отлично!'],
+        agentResponse: 'Артефакт зарегистрирован.'
       },
+      checklist: [
+        'Все миссии пройдены успешно'
+      ],
+      missions: [
+        {
+          id: 'coin-clicker',
+          title: 'Миссия A: Кликер монет',
+          type: 'dom-event',
+          durationMinutes: 15,
+          intro: 'Создайте простую игру: кнопка, которая увеличивает счетчик при клике.',
+          artifact: 'coin-clicker-app',
+          successCriteria: ['Счетчик начинается с нуля', 'Клик увеличивает число'],
+          unlockText: 'Отлично! Вы добавили интерактивность в DOM.',
+          starterFiles: { html: '<div class="app">\n  <h1>0</h1>\n  <button>Клик</button>\n</div>', css: 'body { text-align: center; font-family: sans-serif; padding: 50px; }', js: '// Ваш код здесь' },
+          agentInstructions: [],
+          steps: [
+            { 
+              id: 'step1', 
+              title: 'Разметка', 
+              target: 'html', 
+              instruction: 'Добавьте id="score" для элемента счета и id="coin-btn" для кнопки.', 
+              checkIds: ['html-score', 'html-btn'],
+              hints: ['Ищите теги <h1> и <button>', 'Добавьте атрибут id', 'Пример: <h1 id="score">0</h1>'],
+              doneText: 'Id добавлены.'
+            },
+            { 
+              id: 'step2', 
+              title: 'Логика', 
+              target: 'js', 
+              instruction: 'Добавьте обработчик клика, который увеличивает число внутри #score на 1.',
+              checkIds: ['func-click'],
+              hints: ['Используйте document.getElementById', 'Используйте addEventListener', 'Обновляйте textContent'],
+              doneText: 'Логика работает!'
+            }
+          ],
+          checks: [
+            { id: 'html-score', kind: 'selector', label: 'Существует элемент с id="score"', selector: '#score', required: true, failHint: 'Добавьте <div id="score">0</div>' },
+            { id: 'html-btn', kind: 'selector', label: 'Существует элемент с id="coin-btn"', selector: '#coin-btn', required: true, failHint: 'Добавьте <button id="coin-btn">Клик!</button>' },
+            { id: 'func-click', kind: 'functional', label: 'Счетчик увеличивается по клику', script: 'const old = parseInt(api.text("#score"))||0; api.click("#coin-btn"); const cur = parseInt(api.text("#score"))||0; return cur > old;', required: true, failHint: 'Клик по кнопке не меняет число внутри #score' }
+          ]
+        },
+        {
+          id: 'mvp-first-scenario',
+          title: 'Миссия B: Трекер привычек MVP',
+          type: 'state-render',
+          durationMinutes: 30,
+          intro: 'Соберите рабочий трекер привычек прямо в песочнице.',
+          artifact: 'habit-tracker-mvp',
+          successCriteria: ['Форма рендерит привычку в список'],
+          unlockText: 'Поздравляем! Трекер готов.',
+          starterFiles: { html: '<!-- Разметка -->', css: '/* Стили */', js: '// Логика' },
+          agentInstructions: [],
+          steps: [
+            { 
+              id: 'step1', 
+              title: 'Разметка формы', 
+              target: 'html', 
+              instruction: 'Создайте форму с id="habit-form" и список с id="habits-list".',
+              checkIds: ['html-form', 'html-list'],
+              hints: ['Нужен тег <form>', 'Нужен <div id="habits-list">', 'Форма должна содержать input и button'],
+              doneText: 'Разметка готова.'
+            },
+            { 
+              id: 'step2', 
+              title: 'Рендер привычек', 
+              target: 'js', 
+              instruction: 'Напишите JS логику, которая добавляет привычки в список.',
+              checkIds: [],
+              hints: ['Слушайте событие submit', 'Используйте preventDefault', 'Добавляйте HTML в habits-list'],
+              doneText: 'Рендер работает.'
+            }
+          ],
+          checks: [
+            { id: 'html-form', kind: 'selector', label: 'Существует форма habit-form', selector: '#habit-form', required: true, failHint: 'Добавьте <form id="habit-form">' },
+            { id: 'html-list', kind: 'selector', label: 'Существует контейнер habits-list', selector: '#habits-list', required: true, failHint: 'Добавьте <div id="habits-list">' }
+          ]
+        }
+      ]
     },
     quiz: [
       {

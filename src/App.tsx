@@ -13,6 +13,7 @@ import { PromptBuilder } from './components/PromptBuilder';
 import { TeacherDashboard } from './components/TeacherDashboard';
 import { TourPage } from './components/tour/TourPage';
 import { DeployPreview } from './components/DeployPreview';
+import { PracticeMissionRunner } from './components/PracticeMissionRunner';
 import { supabase } from './supabaseClient';
 import { loadCourseModules } from './lib/contentService';
 import { loadProgress, saveWeekCompleted, saveChecklistItem } from './lib/progressService';
@@ -289,12 +290,23 @@ function App() {
                           <div className="card-header-iconified">
                             <GraduationCap className="card-header-icon" />
                             <h3>
-                              {activeModule.practice.type === 'prompt'
-                                ? 'Конструктор инженерных запросов'
-                                : 'IDE Песочница Домашней Работы'}
+                              {activeModule.practice.mode === 'mission'
+                                ? 'Mission Workspace'
+                                : activeModule.practice.type === 'prompt'
+                                  ? 'Конструктор инженерных запросов'
+                                  : 'IDE Песочница Домашней Работы'}
                             </h3>
                           </div>
-                          {activeModule.practice.type === 'prompt' ? (
+                          {activeModule.practice.mode === 'mission' ? (
+                            <PracticeMissionRunner
+                              key={selectedWeekId}
+                              practice={activeModule.practice}
+                              weekTitle={activeModule.title}
+                              weekId={selectedWeekId}
+                              onHomeworkApproved={() => handleCompleteWeek(selectedWeekId)}
+                              userProfile={userProfile}
+                            />
+                          ) : activeModule.practice.type === 'prompt' ? (
                             <PromptBuilder
                               key={selectedWeekId}
                               practice={activeModule.practice}

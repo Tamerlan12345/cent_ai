@@ -40,6 +40,7 @@ export interface PracticeTask {
   id: string;
   title: string;
   type: 'prompt' | 'code';
+  mode?: PracticeMode;
   durationMinutes: number;
   description: string;
   steps: string[];
@@ -57,6 +58,72 @@ export interface PracticeTask {
     comments: string[];
     agentResponse: string;
   };
+  missions?: PracticeMission[];
+}
+
+export type PracticeMode = 'classic' | 'mission';
+
+export type MissionType =
+  | 'prompt-fix'
+  | 'diff-audit'
+  | 'bug-reproduce'
+  | 'loop-breaker'
+  | 'dom-event'
+  | 'state-render'
+  | 'local-storage'
+  | 'xss-lab'
+  | 'quota-deploy'
+  | 'ai-media-prompt'
+  | 'mvp-scenario';
+
+export type MissionFileTarget = 'html' | 'css' | 'js' | 'prompt' | 'preview' | 'deploy';
+
+export interface SandboxStarter {
+  html: string;
+  css: string;
+  js: string;
+}
+
+export interface MissionStep {
+  id: string;
+  title: string;
+  target: MissionFileTarget;
+  instruction: string;
+  checkIds: string[];
+  hints: [string, string, string];
+  doneText: string;
+}
+
+export interface MissionCheck {
+  id: string;
+  label: string;
+  kind: 'selector' | 'js-pattern' | 'css-pattern' | 'functional';
+  required: boolean;
+  selector?: string;
+  pattern?: string;
+  script?: string;
+  failHint: string;
+}
+
+export interface MissionAgentInstruction {
+  agentName: string;
+  skillName: string;
+  instruction: string;
+}
+
+export interface PracticeMission {
+  id: string;
+  title: string;
+  type: MissionType;
+  durationMinutes: number;
+  intro: string;
+  artifact: string;
+  successCriteria: string[];
+  starterFiles: SandboxStarter;
+  steps: MissionStep[];
+  checks: MissionCheck[];
+  agentInstructions: MissionAgentInstruction[];
+  unlockText: string;
 }
 
 export interface QuizQuestion {
