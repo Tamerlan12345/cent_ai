@@ -15,7 +15,7 @@
 
 /* Practice Workspace Styles */
 .practice-workspace-page {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 2rem auto;
   padding: 0 1rem;
 }
@@ -75,7 +75,7 @@
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 400px 1fr;
   gap: 2rem;
   align-items: start;
 }
@@ -216,7 +216,7 @@
 }
 
 .footer-container {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;

@@ -278,6 +278,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           <meta charset="UTF-8" />
           <style>
             body { margin: 0; padding: 1rem; background: #0A0E17; color: #E2E8F0; font-family: system-ui, sans-serif; }
+
+      /* Custom Scrollbar for Iframe */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: #0A0E17; }
+      ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
             ${c}
           </style>
           <script>
