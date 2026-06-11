@@ -25,12 +25,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   const location = useLocation();
 
   const navItems = [
-    { id: '/', label: 'Главная' },
-    { id: '/program', label: 'Программа' },
-    { id: '/slides', label: 'Слайды' },
-    { id: '/practice', label: 'Практика' },
+    { id: '/', label: 'Учиться' },
+    { id: '/practice', label: 'Песочница' },
     { id: '/resources', label: 'Ресурсы' },
-    { id: '/tour', label: 'Онбординг' },
   ];
 
   if (userProfile?.role === 'teacher' || userProfile?.role === 'admin') {

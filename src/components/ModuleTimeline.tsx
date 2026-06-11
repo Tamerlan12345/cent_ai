@@ -17,7 +17,7 @@ export const ModuleTimeline: React.FC<ModuleTimelineProps> = ({
   return (
     <section id="timeline" className="timeline-section">
       <div className="timeline-header">
-        <h2 className="timeline-section-title">8-Недельная Программа Лаборатории</h2>
+        <h2 className="timeline-section-title">4-недельный базовый курс</h2>
         <p className="timeline-section-subtitle">
           Пошаговый путь от хаотичных запросов к автоматизированному производственному циклу
         </p>

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Rocket, AlertOctagon, Clock } from 'lucide-react';
-import { getDeployment } from '../lib/sandboxStore';
+import { getDeployment, getQuotaForStudent } from '../lib/sandboxStore';
 import type { DeployedSnapshot } from '../types';
 import './DeployPreview.css';
 
@@ -17,11 +17,24 @@ export const DeployPreview: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [deployment, setDeployment] = useState<DeployedSnapshot | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
-    setDeployment(getDeployment(id));
+    const dep = getDeployment(id);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDeployment(dep);
+    if (dep) {
+      const q = getQuotaForStudent(dep.studentId);
+      setTimeLeft(q.maxRunSeconds);
+    }
   }, [id]);
+
+  useEffect(() => {
+    if (timeLeft === null || timeLeft <= 0) return;
+    const timer = window.setInterval(() => setTimeLeft(t => t !== null && t > 0 ? t - 1 : 0), 1000);
+    return () => window.clearInterval(timer);
+  }, [timeLeft]);
 
   const previewDoc = useMemo(() => {
     if (!deployment) return '';
@@ -104,17 +117,34 @@ export const DeployPreview: React.FC = () => {
       </header>
 
       <div className="deploy-preview-frame-shell">
-        <iframe
-          title={deployment.projectName}
-          srcDoc={previewDoc}
-          sandbox="allow-scripts"
-          className="deploy-preview-iframe"
-        />
+        {timeLeft !== null && timeLeft <= 0 ? (
+          <div className="deploy-preview-empty">
+            <AlertOctagon size={32} />
+            <h2>Лимит времени исчерпан</h2>
+            <p>
+              Выделенная квота времени выполнения ({getQuotaForStudent(deployment.studentId).maxRunSeconds} сек) истекла.
+            </p>
+          </div>
+        ) : (
+          <iframe
+            title={deployment.projectName}
+            srcDoc={previewDoc}
+            sandbox="allow-scripts"
+            className="deploy-preview-iframe"
+          />
+        )}
       </div>
 
-      <footer className="deploy-preview-footer">
-        Внутренний деплой курса. Это не публичный хостинг — после курса вы
-        перенесёте проект на GitHub Pages, Netlify или Vercel (см. библиотеку ресурсов).
+      <footer className="deploy-preview-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span>
+          Внутренний деплой курса. Это не публичный хостинг — после курса вы
+          перенесёте проект на GitHub Pages, Netlify или Vercel (см. библиотеку ресурсов).
+        </span>
+        {timeLeft !== null && timeLeft > 0 && (
+          <span style={{ color: timeLeft < 60 ? '#ef4444' : 'inherit' }}>
+            Осталось времени: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+          </span>
+        )}
       </footer>
     </div>
   );

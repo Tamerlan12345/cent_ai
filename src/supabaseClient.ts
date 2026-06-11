@@ -216,6 +216,7 @@ const mockSupabase = {
   },
 
   from: (table: string) => ({
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     select: (_columns = '*') => createSelectBuilder(table),
 
     insert: (values: RowData | RowData[]) => {

@@ -376,11 +376,11 @@ export const courseModules: CourseModule[] = [
     ],
     practice: {
       id: 'p1',
-      title: 'Vibe Coding Canvas: интервью-промпт для будущего MVP',
+      title: 'Практика: ИИ-помощник и генерация промптов',
       type: 'prompt',
+      mode: 'mission',
       durationMinutes: 45,
-      description:
-        'Соберите промпт-интервью, который проведёт ИИ-ментора через ваш Canvas. На выходе — заполненный Markdown-документ для второй недели.',
+      description: 'Соберите правильные инструкции для вашего агента-наставника и создайте первый визуальный концепт.',
       steps: [
         'Откройте Конструктор Промптов справа.',
         'Задайте роль: продакт-ментор и наставник по вайб-кодингу, обучающий в Google Antigravity.',
@@ -388,33 +388,106 @@ export const courseModules: CourseModule[] = [
         'Пропишите ограничения: только HTML/CSS/JS + LocalStorage, без бэкенда и авторизации, MVP — 3 функции.',
         'В критерии DoD укажите: ИИ задаёт 10 вопросов, потом собирает Canvas из 10 пунктов в Markdown.',
       ],
-      expectedOutput: 'Промпт-интервью, который превращает идею в готовый Vibe Coding Canvas.',
-      initialPrompt: {
-        goal: 'Помоги собрать Vibe Coding Canvas для моего MVP',
-        context: 'Я новичок, учусь в курсе вайб-кодинга 2026, IDE — Google Antigravity',
-        constraints: 'Стек: HTML/CSS/JS + LocalStorage, без бэкенда, MVP из 3 функций',
-        dod: 'Сначала 10 вопросов, потом собранный Canvas в Markdown',
-      },
-      hints: [
-        'Явно укажите «не пиши код, это продуктовый этап» — иначе агент скатится в HTML.',
-        'Попросите подытожить в конце список 5 пунктов «не входит в MVP» — это часто забывают.',
-      ],
-      checklist: [
-        'Роль ментора и наставника по Antigravity задана',
-        'Ограничение стек HTML/CSS/JS + LocalStorage указано',
-        'Запрет на генерацию кода прописан',
-        'Требование 10 вопросов до Canvas есть',
-        'Требование вывода Canvas в Markdown указано',
-      ],
-      simulationFeedback: {
-        score: 100,
-        comments: [
-          'Сильный промпт-интервью: вы не дали агенту скатиться в код раньше времени.',
-          'Список 10 вопросов даст структурированный Canvas — отличная база для второй недели.',
-        ],
-        agentResponse:
-          'Промпт принят. Ваш Canvas будет основан на ответах. Начинаю с вопроса 1: кто конкретный пользователь — опишите одного человека, не «все на свете»?',
-      },
+      expectedOutput: 'Три проверенных промпта для разных задач.',
+      initialPrompt: { goal: '', context: '', constraints: '', dod: '' },
+      hints: [],
+      checklist: [],
+      simulationFeedback: { score: 100, comments: [], agentResponse: '' },
+      missions: [
+        {
+          id: 'm1-1',
+          title: 'Миссия 1. Починить слабый промпт',
+          type: 'prompt-fix',
+          durationMinutes: 10,
+          intro: 'У вас есть типичный "плохой" промпт: "Сделай красиво". Перепишите его по формуле.',
+          artifact: 'prompt',
+          successCriteria: [
+            'Goal заполнен и понятен',
+            'Context содержит информацию о пользователе',
+            'Constraints ограничивает технологии (HTML/CSS/JS)',
+            'DoD четко измерим'
+          ],
+          starterFiles: { html: '', css: '', js: '' },
+          steps: [
+            {
+              id: 's1',
+              title: 'Сборка структуры',
+              target: 'prompt',
+              instruction: 'Заполните поля Goal, Context, Constraints и DoD, чтобы агент получил детальную задачу.',
+              checkIds: ['check-goal', 'check-context', 'check-constraints', 'check-dod'],
+              hints: ['Не пишите "сделай кнопку", опишите "зачем она нужна".', 'В Context напишите "HTML/CSS проект без фреймворков".', 'В Constraints запретите React.'],
+              doneText: 'Отлично, структура промпта теперь прозрачна для агента.'
+            }
+          ],
+          checks: [
+            { id: 'check-goal', label: 'Наличие Goal', kind: 'functional', required: true, failHint: 'Поле Goal не должно быть пустым или слишком коротким.' },
+            { id: 'check-context', label: 'Наличие Context', kind: 'functional', required: true, failHint: 'Context не должен быть пустым.' },
+            { id: 'check-constraints', label: 'Наличие Constraints', kind: 'functional', required: true, failHint: 'Constraints не должны быть пустыми.' },
+            { id: 'check-dod', label: 'Наличие DoD', kind: 'functional', required: true, failHint: 'DoD не должен быть пустым.' }
+          ],
+          agentInstructions: [],
+          unlockText: 'Промпт зачтен.'
+        },
+        {
+          id: 'm1-2',
+          title: 'Миссия 2. Личный наставник',
+          type: 'ai-helper-brief',
+          durationMinutes: 15,
+          intro: 'Создайте инструкцию для вашего личного ментора.',
+          artifact: 'brief',
+          successCriteria: [
+            'Указана роль (наставник)',
+            'Запрещено писать код за студента'
+          ],
+          starterFiles: { html: '', css: '', js: '' },
+          steps: [
+            {
+              id: 's2',
+              title: 'Правила ментора',
+              target: 'prompt',
+              instruction: 'Опишите роль, задачи и ограничения ментора.',
+              checkIds: ['check-brief'],
+              hints: ['Укажите, что ментор должен задавать вопросы, а не давать ответы.', 'Запретите ментору генерировать финальный код.', 'Укажите тон общения.'],
+              doneText: 'Супер, теперь агент будет вас учить, а не работать за вас.'
+            }
+          ],
+          checks: [
+            { id: 'check-brief', label: 'Инструкция заполнена', kind: 'functional', required: true, failHint: 'Промпт не должен быть пустым.' }
+          ],
+          agentInstructions: [],
+          unlockText: 'Ментор готов к работе.'
+        },
+        {
+          id: 'm1-3',
+          title: 'Миссия 3. Медиа-генерация',
+          type: 'ai-media-prompt',
+          durationMinutes: 10,
+          intro: 'Опишите концепт вашего MVP для генератора изображений.',
+          artifact: 'prompt',
+          successCriteria: [
+            'Описан стиль',
+            'Описаны ключевые объекты',
+            'Указано отсутствие текста на изображении'
+          ],
+          starterFiles: { html: '', css: '', js: '' },
+          steps: [
+            {
+              id: 's3',
+              title: 'Описание картинки',
+              target: 'prompt',
+              instruction: 'Напишите промпт для обложки MVP. Опишите визуальный стиль и главные элементы.',
+              checkIds: ['check-media'],
+              hints: ['Укажите освещение (студийное, неон, дневное свет).', 'Укажите стиль (3D, flat illustration, cyberpunk).', 'Попросите не добавлять текст (нейросети часто пишут с ошибками).'],
+              doneText: 'Промпт готов для генерации в Midjourney или DALL-E.'
+            }
+          ],
+          checks: [
+            { id: 'check-media', label: 'Заполнение промпта', kind: 'functional', required: true, failHint: 'Заполните поля визуального описания.' }
+          ],
+          agentInstructions: [],
+          unlockText: 'Медиа-промпт зачтен.'
+        }
+      ]
     },
     quiz: [
       {
@@ -958,11 +1031,11 @@ build/
     ],
     practice: {
       id: 'p2',
-      title: 'Промпт для генерации AGENTS.md под ваш проект',
+      title: 'Практика: Проектирование MVP и Контекстный Пакет',
       type: 'prompt',
+      mode: 'mission',
       durationMinutes: 60,
-      description:
-        'Соберите промпт, по которому ИИ-архитектор сгенерирует AGENTS.md для вашего MVP. Файл должен быть готов к использованию в Antigravity Manager.',
+      description: 'Отсеките лишнее от вашего продукта, спроектируйте первый экран и создайте базовую документацию.',
       steps: [
         'Откройте Конструктор Промптов справа.',
         'Задайте роль: Senior Lead Architect, который пишет AGENTS.md для учебного MVP в Antigravity.',
@@ -970,33 +1043,103 @@ build/
         'Ограничения: запрет фреймворков, обязательные CSS-переменные, маленькие diff, никаких секретов.',
         'DoD: вывод в формате Markdown с разделами Project, Stack, Commands, Rules, Architecture, Done criteria.',
       ],
-      expectedOutput: 'Готовый к копированию AGENTS.md, который агент сможет читать в Antigravity Manager.',
-      initialPrompt: {
-        goal: 'Сгенерируй AGENTS.md для моего учебного MVP',
-        context: 'Канва моего проекта: [вставьте Canvas]. Стек: HTML/CSS/JS + LocalStorage',
-        constraints: 'Без React/Vue/Tailwind, без бэкенда, без секретов, маленькие diff',
-        dod: 'Markdown с разделами Project, Stack, Commands, Rules, Architecture, Done criteria',
-      },
-      hints: [
-        'Передайте Canvas через @-mention или вставкой — иначе агент додумает.',
-        'Явно укажите: «не выдумывай команды установки — у нас платформа курса, см. раздел Commands».',
-      ],
-      checklist: [
-        'Роль архитектора задана',
-        'Vibe Coding Canvas передан в контекст',
-        'Запреты на фреймворки явно прописаны',
-        'Разделы AGENTS.md перечислены',
-        'Уточнение «маленькие diff» присутствует',
-      ],
-      simulationFeedback: {
-        score: 100,
-        comments: [
-          'Промпт получился полноценным контрактом — агент не уйдёт в импровизацию.',
-          'Передача Canvas как контекста — самая важная деталь, она экономит часы будущих правок.',
-        ],
-        agentResponse:
-          'AGENTS.md сгенерирован: проект, стек, команды платформы, 6 правил, архитектурная карта на 3 файла, 4 критерия Done. Готов к загрузке в корень репозитория.',
-      },
+      expectedOutput: 'Сформированный MVP Brief и карта экрана.',
+      initialPrompt: { goal: '', context: '', constraints: '', dod: '' },
+      hints: [],
+      checklist: [],
+      simulationFeedback: { score: 100, comments: [], agentResponse: '' },
+      missions: [
+        {
+          id: 'm2-1',
+          title: 'Миссия 1. Scope Cutter',
+          type: 'mvp-scenario',
+          durationMinutes: 15,
+          intro: 'Задача: срезать 80% фич и оставить 20%, которые дают 100% ценности.',
+          artifact: 'brief',
+          successCriteria: [
+            'Указана только 1 ключевая роль пользователя',
+            'Описан 1 главный сценарий',
+            'В списке "Не входит в MVP" минимум 3 пункта'
+          ],
+          starterFiles: { html: '', css: '', js: '' },
+          steps: [
+            {
+              id: 's2-1',
+              title: 'Срез фич',
+              target: 'prompt',
+              instruction: 'Напишите промпт, чтобы ИИ помог вам отсечь лишнее из Canvas и составить строгий PROJECT_BRIEF.',
+              checkIds: ['check-brief-role', 'check-brief-scenario'],
+              hints: ['Укажите агенту роль "безжалостный продакт-менеджер".', 'Попросите агента задавать вам вопросы, если сценарий слишком сложный.', 'Добавьте требование: составить список из 5 фич "в бэклог".'],
+              doneText: 'Проект очищен от лишних деталей.'
+            }
+          ],
+          checks: [
+            { id: 'check-brief-role', label: 'Указание роли', kind: 'functional', required: true, failHint: 'Поле Goal или Context должно содержать цель создания краткого брифа (brief, mvp).' },
+            { id: 'check-brief-scenario', label: 'Ограничения MVP', kind: 'functional', required: true, failHint: 'Запретите агенту добавлять новый функционал в Constraints.' }
+          ],
+          agentInstructions: [],
+          unlockText: 'MVP Scope Cutter пройден.'
+        },
+        {
+          id: 'm2-2',
+          title: 'Миссия 2. Screen Map',
+          type: 'dom-event',
+          durationMinutes: 20,
+          intro: 'Опишите структуру главного экрана до написания кода.',
+          artifact: 'screen-map',
+          successCriteria: [
+            'Описаны 3 главных блока (Header, Main, Footer)',
+            'Ключевая кнопка (Call to Action) имеет уникальный ID',
+            'Указано, где выводятся ошибки или статус'
+          ],
+          starterFiles: { html: '', css: '', js: '' },
+          steps: [
+            {
+              id: 's2-2',
+              title: 'Проектирование DOM',
+              target: 'prompt',
+              instruction: 'Попросите агента создать SCREEN_ELEMENT_MAP.md. Это текстовая карта экрана (какие ID, классы и блоки).',
+              checkIds: ['check-screen-map'],
+              hints: ['Укажите, что нужен формат Markdown.', 'Попросите агента прописать IDs для всех кнопок.', 'Запретите агенту писать CSS — нужна только структура.'],
+              doneText: 'Карта элементов готова.'
+            }
+          ],
+          checks: [
+            { id: 'check-screen-map', label: 'Запрос карты элементов', kind: 'functional', required: true, failHint: 'В промпте нужно запросить структуру блоков или карту (screen map, dom).' }
+          ],
+          agentInstructions: [],
+          unlockText: 'Screen Map зафиксирован.'
+        },
+        {
+          id: 'm2-3',
+          title: 'Миссия 3. AGENTS.md Generator',
+          type: 'prompt-fix',
+          durationMinutes: 15,
+          intro: 'Сгенерируйте главный файл инструкций для вашего ИИ в Antigravity.',
+          artifact: 'agents-md',
+          successCriteria: [
+            'Файл включает стек (HTML/CSS/JS)',
+            'Файл запрещает React/Vue'
+          ],
+          starterFiles: { html: '', css: '', js: '' },
+          steps: [
+            {
+              id: 's2-3',
+              title: 'Правила проекта',
+              target: 'prompt',
+              instruction: 'Напишите промпт для генерации AGENTS.md. Укажите стек, запреты и архитектуру из Screen Map.',
+              checkIds: ['check-agents-md'],
+              hints: ['Ограничьте стек базовыми технологиями.', 'Попросите ИИ опираться на созданные PROJECT_BRIEF и SCREEN_ELEMENT_MAP.', 'Добавьте правило про маленькие коммиты.'],
+              doneText: 'AGENTS.md сгенерирован.'
+            }
+          ],
+          checks: [
+            { id: 'check-agents-md', label: 'Генерация правил', kind: 'functional', required: true, failHint: 'Заполните поля промпта, указав AGENTS.md или правила.' }
+          ],
+          agentInstructions: [],
+          unlockText: 'Все артефакты для разработки готовы.'
+        }
+      ]
     },
     quiz: [
       {
@@ -1984,50 +2127,101 @@ try {
     ],
     practice: {
       id: 'p4',
-      title: 'Quality Gate, безопасность и подготовка к защите',
+      title: 'QA, Security, Deploy & Defense Prep',
       type: 'code',
-      durationMinutes: 90,
-      description:
-        'Закройте Quality Gate, защитите код от XSS, пройдитесь по TEST_PLAN, сделайте финальный внутренний деплой и подготовьте текст 3-минутной речи защиты — всё в одной сессии.',
-      steps: [
-        'В main.js добавьте функцию escapeHtml и оберните в неё вставку имени привычки.',
-        'Добавьте лимит 50 символов на имя — alert и отказ в добавлении.',
-        'Пройдитесь по TEST_PLAN.md (5 основных + 5 негативных сценариев) и зафиксируйте результаты.',
-        'Сделайте финальный снапшот «v1.0 — to defense».',
-        'Опубликуйте внутренний деплой — получите ссылку /preview/:id для защиты.',
-        'В комментарии в начале main.js (или отдельным файлом) запишите текст вашей 3-минутной речи по шаблону.',
-      ],
-      expectedOutput: 'Защищённый код, пройденный TEST_PLAN, ссылка на /preview/:id, готовая речь.',
-      initialPrompt: {
-        goal: 'Поднять MVP до уровня защиты: безопасность + Quality Gate + речь',
-        context: 'Стек: HTML/CSS/JS + LocalStorage. Снапшоты доступны.',
-        constraints: 'Без новых библиотек. Маленькие diff. Escape всего пользовательского ввода.',
-        dod: 'XSS закрыт, лимит 50 символов, TEST_PLAN пройден, /preview/:id опубликован, речь написана.',
-      },
-      hints: [
-        'Для escape достаточно заменить &, <, >, " и одинарную кавычку.',
-        'Длину проверяем ДО добавления в массив — не после.',
-        'Финальный снапшот делайте с описанием «v1.0 — to defense» — найдёте за секунду.',
-      ],
-      checklist: [
-        'Функция escapeHtml применяется ко всему пользовательскому вводу',
-        'Лимит 50 символов работает с понятным сообщением',
-        'LocalStorage защищён try/catch на чтение и запись',
-        'TEST_PLAN пройден — все 10 сценариев зафиксированы',
-        'Опубликован внутренний деплой v1.0',
-        'Речь по шаблону на 3 минуты — записана',
-      ],
-      simulationFeedback: {
-        score: 100,
-        comments: [
-          'XSS закрыт грамотно — escape работает на всех вставках.',
-          'Лимит и валидация на месте, LocalStorage устойчив к битым данным.',
-          'TEST_PLAN пройден полностью, артефакт-скриншоты в комментариях.',
-          'Речь чёткая, фокус на пользу и роль агента/человека.',
-        ],
-        agentResponse:
-          'Проект готов к защите. Ссылка /preview/:id активна. Речь укладывается в 3:00. Удачи на защите — и до встречи на втором уровне курса!',
-      },
+      mode: 'mission',
+      durationMinutes: 120,
+      description: 'Закройте Quality Gate, защитите код от XSS, сделайте внутренний деплой и подготовьте текст защиты.',
+      missions: [
+        {
+          id: 'xss-lab',
+          title: 'Миссия 1: XSS Lab (Security)',
+          type: 'xss-lab',
+          durationMinutes: 30,
+          unlockText: '',
+          intro: 'Изучаем уязвимость вставки HTML и применяем escapeHtml.',
+          artifact: 'xss-fixed',
+          successCriteria: ['Функция escapeHtml применяется ко всему пользовательскому вводу'],
+          starterFiles: {
+            html: `<div class="sandbox-app">\n  <div id="target"></div>\n</div>`,
+            css: `.sandbox-app { padding: 2rem; color: white; }`,
+            js: `const input = "<img src=x onerror=alert('XSS!')>";\n// Задача: реализовать функцию escapeHtml и безопасно вывести input\ndocument.getElementById('target').innerHTML = input;`
+          },
+          steps: [
+            {
+              id: 's1',
+              title: 'Экранирование ввода',
+              instruction: 'Реализуйте функцию escapeHtml и примените её перед innerHTML.',
+              hints: ["Используйте replace(/[&<>\\\"\\\\']/g, ...)", "", ""],
+              target: 'js',
+              checkIds: ['check-xss-escaped'],
+              doneText: 'Скрипт больше не выполняется при рендере!'
+            }
+          ],
+          checks: [
+            { id: 'check-xss-escaped', label: 'XSS уязвимость устранена', required: true, kind: 'js-pattern', pattern: 'escapeHtml', failHint: 'Оберните ввод в функцию escapeHtml' }
+          ],
+          agentInstructions: [
+            { agentName: 'Security QA', skillName: 'PenTest', instruction: 'Проверить наличие вызова escapeHtml при обновлении DOM.' }
+          ]
+        },
+        {
+          id: 'quota-deploy',
+          title: 'Миссия 2: Внутренний Деплой',
+          type: 'quota-deploy',
+          durationMinutes: 30,
+          unlockText: '',
+          intro: 'Имитация релиза — публикуем проект через /preview/:id.',
+          artifact: 'deploy-link',
+          successCriteria: ['Проект развёрнут и имеет уникальный ID'],
+          starterFiles: {
+            html: `<h1>Мой финальный проект</h1>`,
+            css: `h1 { color: #00F2FE; }`,
+            js: `console.log('Готов к деплою');`
+          },
+          steps: [
+            {
+              id: 's1',
+              title: 'Кнопка "Деплой"',
+              instruction: 'Откройте менеджер и сделайте Snapshot. Затем нажмите Deploy.',
+              hints: ['Убедитесь, что код работает локально без ошибок.', '', ''],
+              target: 'deploy',
+              checkIds: ['check-deploy-published'],
+              doneText: 'Деплой успешен!'
+            }
+          ],
+          checks: [
+            { id: 'check-deploy-published', label: 'Проект опубликован на /preview/:id', required: true, kind: 'js-pattern', pattern: '.*', failHint: 'Опубликуйте проект' }
+          ],
+          agentInstructions: []
+        },
+        {
+          id: 'defense-script',
+          title: 'Миссия 3: Промпт для защиты',
+          type: 'ai-media-prompt',
+          durationMinutes: 30,
+          unlockText: '',
+          intro: 'Генерируем структуру речи (5 слайдов) для комиссии.',
+          artifact: 'defense-speech-plan',
+          successCriteria: ['Написан промпт с запросом 5 слайдов и речи'],
+          starterFiles: { html: '', css: '', js: '' },
+          steps: [
+            {
+              id: 's1',
+              title: 'Контекст для речи',
+              instruction: 'Составьте промпт с просьбой подготовить речь на 3 минуты.',
+              hints: ['Укажите, что нужно 5 слайдов', 'Приложите текст из PROJECT_BRIEF', ''],
+              target: 'prompt',
+              checkIds: ['check-speech-prompt'],
+              doneText: 'План защиты сформирован.'
+            }
+          ],
+          checks: [
+            { id: 'check-speech-prompt', label: 'Промпт включает требования к 5 слайдам', required: true, kind: 'js-pattern', failHint: 'Запросите 5 слайдов и текст речи' }
+          ],
+          agentInstructions: []
+        }
+      ]
     },
     quiz: [
       {

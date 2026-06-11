@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vibe Brainstorm Strategist"
+  short_description: "Brainstorm dense, testable platform ideas"
+  default_prompt: "Use $vibe-brainstorm-strategist to generate bold but implementation-aware ideas for the next course iteration."

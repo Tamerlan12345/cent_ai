@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, AlertTriangle, CheckCircle,
   Code, BookOpen, Lightbulb, Zap, ArrowRight
@@ -17,6 +18,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   selectedWeekId,
   setSelectedWeekId,
 }) => {
+  const navigate = useNavigate();
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [animClass, setAnimClass] = useState('slide-enter-right');
   const dirRef = useRef<'next' | 'prev'>('next');
@@ -277,13 +279,21 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
             ))}
           </div>
 
-          <button
-            onClick={handleNext}
-            disabled={currentSlideIndex === activeModule.slides.length - 1}
-            className="btn btn-primary slide-nav-btn"
-          >
-            Далее <ChevronRight size={16} />
-          </button>
+          {currentSlideIndex === activeModule.slides.length - 1 ? (
+            <button
+              onClick={() => navigate('/practice')}
+              className="btn btn-primary slide-nav-btn"
+            >
+              Начать практику <ArrowRight size={16} />
+            </button>
+          ) : (
+            <button
+              onClick={handleNext}
+              className="btn btn-primary slide-nav-btn"
+            >
+              Далее <ChevronRight size={16} />
+            </button>
+          )}
         </div>
       </div>
 

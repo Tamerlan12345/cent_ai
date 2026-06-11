@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vibe Learning UX Designer"
+  short_description: "Design beginner-first learning UX flows"
+  default_prompt: "Use $vibe-learning-ux-designer to turn course content into a clear interactive learning journey."

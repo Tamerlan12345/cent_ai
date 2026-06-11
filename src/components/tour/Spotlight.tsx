@@ -50,6 +50,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({ config, onDismiss }) => {
   }, [config]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     measure();
     if (!config) return;
 

@@ -7,18 +7,45 @@ import './ResourceLibrary.css';
 export const ResourceLibrary: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [activeWeek, setActiveWeek] = useState<string>('all');
   const [resourceLinks, setResourceLinks] = useState<ResourceLink[]>([]);
 
   useEffect(() => {
     loadResources().then(setResourceLinks);
   }, []);
 
+  const categoryLabels: Record<string, string> = {
+    docs: 'Документация',
+    tools: 'Инструменты',
+    templates: 'Шаблоны',
+    articles: 'Статьи',
+    antigravity: 'Antigravity',
+    agents: 'Агенты',
+    git: 'Git',
+    mcp: 'MCP',
+    supabase: 'Supabase',
+    security: 'Безопасность',
+  };
+
   const categories = [
     { id: 'all', label: 'Все ресурсы' },
-    { id: 'docs', label: 'Документация' },
-    { id: 'tools', label: 'Инструменты' },
-    { id: 'templates', label: 'Шаблоны' },
-    { id: 'articles', label: 'Статьи' },
+    ...Array.from(new Set(resourceLinks.map((link) => link.category))).map((cat) => ({
+      id: cat,
+      label: categoryLabels[cat] || cat,
+    })),
+  ];
+
+  const weeks = [
+    { id: 'all', label: 'Все недели' },
+    ...Array.from(
+      new Set(
+        resourceLinks
+          .flatMap((link) => link.weekIds || [])
+          .filter((w) => typeof w === 'number')
+      )
+    )
+      .sort((a, b) => a - b)
+      .map((w) => ({ id: w.toString(), label: `Неделя ${w}` })),
   ];
 
   const getCategoryIcon = (category: string) => {
@@ -39,7 +66,9 @@ export const ResourceLibrary: React.FC = () => {
     const matchesSearch =
       link.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       link.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    const matchesWeek =
+      activeWeek === 'all' || (link.weekIds && link.weekIds.includes(parseInt(activeWeek)));
+    return matchesCategory && matchesSearch && matchesWeek;
   });
 
   return (
@@ -76,6 +105,19 @@ export const ResourceLibrary: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {/* Filter weeks */}
+        <div className="category-filters">
+          {weeks.map((w) => (
+            <button
+              key={w.id}
+              onClick={() => setActiveWeek(w.id)}
+              className={`filter-btn ${activeWeek === w.id ? 'active' : ''}`}
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {filteredLinks.length > 0 ? (
@@ -85,17 +127,24 @@ export const ResourceLibrary: React.FC = () => {
               <div className="resource-card-header">
                 <div className={`category-tag ${link.category}`}>
                   {getCategoryIcon(link.category)}
-                  <span>{link.category.toUpperCase()}</span>
+                  <span>{categoryLabels[link.category] || link.category.toUpperCase()}</span>
                 </div>
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="external-link-icon"
-                  title="Открыть в новой вкладке"
-                >
-                  <ExternalLink size={16} />
-                </a>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {link.level && (
+                    <span className={`badge badge-cyan`}>
+                      {link.level === 'required' ? 'Обязательный' : link.level === 'recommended' ? 'Рекомендуемый' : 'Продвинутый'}
+                    </span>
+                  )}
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="external-link-icon"
+                    title="Открыть в новой вкладке"
+                  >
+                    <ExternalLink size={16} />
+                  </a>
+                </div>
               </div>
 
               <h3 className="resource-card-title">{link.title}</h3>

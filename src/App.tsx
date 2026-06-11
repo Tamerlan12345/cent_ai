@@ -238,7 +238,7 @@ function App() {
                           <div className="task-steps">
                             <h4>Инструкция по шагам:</h4>
                             <ol>
-                              {activeModule.practice.steps.map((step, idx) => (
+                              {(activeModule.practice.steps || []).map((step, idx) => (
                                 <li key={idx}>{step}</li>
                               ))}
                             </ol>
@@ -246,7 +246,7 @@ function App() {
                           <div className="task-hints">
                             <h4>Подсказки:</h4>
                             <ul>
-                              {activeModule.practice.hints.map((hint, idx) => (
+                              {(activeModule.practice.hints || []).map((hint, idx) => (
                                 <li key={idx}>{hint}</li>
                               ))}
                             </ul>
@@ -259,7 +259,7 @@ function App() {
                             <h3>Чек-лист готовности к ревью (DoD)</h3>
                           </div>
                           <div className="checklist-items-container">
-                            {activeModule.practice.checklist.map((item, idx) => {
+                            {(activeModule.practice.checklist || []).map((item, idx) => {
                               const itemId = `${selectedWeekId}-check-${idx}`;
                               const isChecked = !!checklist[itemId];
                               return (
@@ -319,7 +319,7 @@ function App() {
                               key={selectedWeekId}
                               weekId={selectedWeekId}
                               weekTitle={activeModule.title}
-                              dodCriteria={activeModule.practice.checklist}
+                              dodCriteria={activeModule.practice.checklist || []}
                               onHomeworkApproved={() => handleCompleteWeek(selectedWeekId)}
                               userProfile={userProfile}
                             />

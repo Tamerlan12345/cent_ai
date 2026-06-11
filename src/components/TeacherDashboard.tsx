@@ -45,6 +45,10 @@ export const TeacherDashboard: React.FC = () => {
   const [selected, setSelected] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Производные данные
+  const [stuckStudents, setStuckStudents] = useState<{ profile: StudentProfile; count: number }[]>([]);
+  const [quotaBlockedStudents, setQuotaBlockedStudents] = useState<StudentProfile[]>([]);
+
   // Управление ресурсами: квоты + список деплоев на выбранного ученика
   const [quotaStudentId, setQuotaStudentId] = useState<string>('');
   const [quotaDraft, setQuotaDraft] = useState<ResourceQuota | null>(null);
@@ -65,12 +69,34 @@ export const TeacherDashboard: React.FC = () => {
         setStudents(profileList);
 
         const rawSubs = (subsRes.data ?? []) as Submission[];
-        setSubmissions(
-          rawSubs.map((s) => ({
+        const mappedSubs = rawSubs.map((s) => ({
             ...s,
             student_profile: profileList.find((p) => p.id === s.student_id),
-          })),
-        );
+        }));
+        setSubmissions(mappedSubs);
+
+        // Анализ: Кто застрял (больше 5 неудачных попыток в активной неделе без успеха)
+        const currentWeekSubs = mappedSubs.filter(s => s.week_id === (cohortRes.data as { active_week?: number })?.active_week);
+        const stuckList: { profile: StudentProfile; count: number }[] = [];
+        const quotaBlockedList: StudentProfile[] = [];
+        
+        for (const p of profileList) {
+          const studentSubs = currentWeekSubs.filter(s => s.student_id === p.id);
+          const hasSuccess = studentSubs.some(s => s.status === 'approved');
+          const fails = studentSubs.filter(s => s.status !== 'approved').length;
+          if (!hasSuccess && fails >= 5) {
+            stuckList.push({ profile: p, count: fails });
+          }
+
+          // Проверка квот
+          const q = getQuotaForStudent(p.id, p.name);
+          const deploys = listDeploymentsForStudent(p.id).length;
+          if (deploys >= q.maxDeploys) {
+            quotaBlockedList.push(p);
+          }
+        }
+        setStuckStudents(stuckList);
+        setQuotaBlockedStudents(quotaBlockedList);
 
         if ((courseRes.data ?? []).length > 0) setTotalWeeks((courseRes.data as unknown[]).length);
       } catch (e) {
@@ -259,6 +285,12 @@ export const TeacherDashboard: React.FC = () => {
                   </button>
                 </div>
 
+                {quotaBlockedStudents.find(s => s.id === quotaStudentId) && (
+                  <div className="alert-quota-block" style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '8px', color: '#ef4444' }}>
+                    <strong>Квота исчерпана!</strong> Ученик не может делать новые деплои. Увеличьте лимит или удалите старые деплои.
+                  </div>
+                )}
+
                 {studentDeployments.length > 0 && (
                   <div className="student-deployments">
                     <h5>Активные внутренние деплои ({studentDeployments.length})</h5>
@@ -301,15 +333,23 @@ export const TeacherDashboard: React.FC = () => {
               {students.length === 0 ? (
                 <p className="empty-label">Нет активных студентов.</p>
               ) : (
-                students.map((s) => (
-                  <div key={s.id} className="student-list-item">
-                    <div className="student-avatar-mock">{s.name.charAt(0).toUpperCase()}</div>
-                    <div className="student-info-col">
-                      <span className="student-name">{s.name}</span>
-                      <span className="student-email">{s.email}</span>
+                students.map((s) => {
+                  const isBlocked = quotaBlockedStudents.some(b => b.id === s.id);
+                  const stuckInfo = stuckStudents.find(st => st.profile.id === s.id);
+                  return (
+                    <div key={s.id} className="student-list-item" onClick={() => handleSelectQuotaStudent(s.id)} style={{ cursor: 'pointer' }}>
+                      <div className="student-avatar-mock">{s.name.charAt(0).toUpperCase()}</div>
+                      <div className="student-info-col">
+                        <span className="student-name">
+                          {s.name}
+                          {isBlocked && <span className="badge badge-danger" style={{ marginLeft: '8px', fontSize: '10px', padding: '2px 4px', background: '#ef4444', borderRadius: '4px' }}>Квота!</span>}
+                          {stuckInfo && <span className="badge badge-warning" style={{ marginLeft: '8px', fontSize: '10px', padding: '2px 4px', background: '#f59e0b', borderRadius: '4px' }}>Застрял ({stuckInfo.count})</span>}
+                        </span>
+                        <span className="student-email">{s.email}</span>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -415,7 +455,7 @@ export const TeacherDashboard: React.FC = () => {
 
                 {selected.payload?.files && (
                   <div className="student-code-panels">
-                    <h5>Код решения:</h5>
+                    <h5>Артефакты работы:</h5>
                     <div className="code-split-block">
                       {selected.payload.files.html && (
                         <div className="code-file-view">

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Bot, CheckCircle2, Circle, Lightbulb, LockOpen, Target } from 'lucide-react';
 import { CodeEditor } from './CodeEditor';
+import { PromptBuilder } from './PromptBuilder';
 import type { CheckResult } from '../lib/grading';
 import type { PracticeTask, UserProfile } from '../types';
 import './PracticeMissionRunner.css';
@@ -147,18 +148,31 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
         </aside>
 
         <div className="mission-editor-panel">
-          <CodeEditor
-            key={`${weekId}-${mission.id}`}
-            weekId={weekId}
-            weekTitle={weekTitle}
-            dodCriteria={mission.successCriteria}
-            initialFiles={mission.starterFiles}
-            mission={mission}
-            onMissionCheckResults={handleResults}
-            onMissionPassed={() => setSandboxUnlocked(true)}
-            onHomeworkApproved={onHomeworkApproved}
-            userProfile={userProfile}
-          />
+          {mission.steps[0]?.target === 'prompt' ? (
+            <PromptBuilder
+              key={`${weekId}-${mission.id}`}
+              practice={practice}
+              mission={mission}
+              weekTitle={weekTitle}
+              weekId={weekId}
+              onHomeworkApproved={onHomeworkApproved}
+              onMissionCheckResults={handleResults}
+              onMissionPassed={() => setSandboxUnlocked(true)}
+            />
+          ) : (
+            <CodeEditor
+              key={`${weekId}-${mission.id}`}
+              weekId={weekId}
+              weekTitle={weekTitle}
+              dodCriteria={mission.successCriteria}
+              initialFiles={mission.starterFiles}
+              mission={mission}
+              onMissionCheckResults={handleResults}
+              onMissionPassed={() => setSandboxUnlocked(true)}
+              onHomeworkApproved={onHomeworkApproved}
+              userProfile={userProfile}
+            />
+          )}
         </div>
       </div>
     </div>

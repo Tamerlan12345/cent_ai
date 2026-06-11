@@ -71,6 +71,7 @@ export const TourPage: React.FC<TourPageProps> = ({ userProfile }) => {
   // Шаг 4: сначала подсвечиваем красную консоль, через пару секунд — Кнопку Паники
   useEffect(() => {
     if (store.currentStep === 'DEBUG_ERROR') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDebugPhase('console');
       const timer = setTimeout(() => setDebugPhase('breaker'), 2600);
       return () => clearTimeout(timer);
@@ -79,6 +80,7 @@ export const TourPage: React.FC<TourPageProps> = ({ userProfile }) => {
 
   // Смена шага сбрасывает скрытый тултип
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDismissedSpot(null);
   }, [store.currentStep, store.pendingDiff, store.isDiffApproved, debugPhase]);
 

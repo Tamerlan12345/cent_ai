@@ -2,26 +2,33 @@ import React, { useState } from 'react';
 import { Copy, Check, Play, RefreshCw, MessageSquareCode, CheckCircle, AlertCircle } from 'lucide-react';
 import { gradeSubmission } from '../lib/aiGateway';
 import type { GradeResult } from '../lib/aiGateway';
-import type { PracticeTask } from '../types';
+import type { CheckResult } from '../lib/grading';
+import type { PracticeTask, PracticeMission } from '../types';
 import './PromptBuilder.css';
 
 interface PromptBuilderProps {
   practice: PracticeTask;
+  mission?: PracticeMission;
   weekTitle: string;
   weekId: number;
   onHomeworkApproved: () => void;
+  onMissionCheckResults?: (results: CheckResult[]) => void;
+  onMissionPassed?: () => void;
 }
 
 export const PromptBuilder: React.FC<PromptBuilderProps> = ({
   practice,
+  mission,
   weekTitle,
   weekId,
   onHomeworkApproved,
+  onMissionCheckResults,
+  onMissionPassed,
 }) => {
-  const [goal, setGoal] = useState(practice.initialPrompt.goal);
-  const [context, setContext] = useState(practice.initialPrompt.context);
-  const [constraints, setConstraints] = useState(practice.initialPrompt.constraints);
-  const [dod, setDod] = useState(practice.initialPrompt.dod);
+  const [goal, setGoal] = useState(practice.initialPrompt?.goal || '');
+  const [context, setContext] = useState(practice.initialPrompt?.context || '');
+  const [constraints, setConstraints] = useState(practice.initialPrompt?.constraints || '');
+  const [dod, setDod] = useState(practice.initialPrompt?.dod || '');
 
   const [copied, setCopied] = useState(false);
   const [simulating, setSimulating] = useState(false);
@@ -48,10 +55,10 @@ ${dod || '[Не заполнено]'}`;
   };
 
   const handleReset = () => {
-    setGoal(practice.initialPrompt.goal);
-    setContext(practice.initialPrompt.context);
-    setConstraints(practice.initialPrompt.constraints);
-    setDod(practice.initialPrompt.dod);
+    setGoal(practice.initialPrompt?.goal || '');
+    setContext(practice.initialPrompt?.context || '');
+    setConstraints(practice.initialPrompt?.constraints || '');
+    setDod(practice.initialPrompt?.dod || '');
     setSimulationResult(null);
   };
 
@@ -59,6 +66,55 @@ ${dod || '[Не заполнено]'}`;
     if (!goal || !context || !constraints || !dod) {
       alert("Пожалуйста, заполните все разделы конструктора, чтобы AI-агент получил полноценный контекст!");
       return;
+    }
+
+    if (mission) {
+      const results: CheckResult[] = [];
+      for (const check of mission.checks) {
+        let passed = false;
+        let evidence = '';
+        const text = combinedPrompt.toLowerCase();
+        
+        if (check.id === 'check-goal' && goal.length > 5) passed = true;
+        else if (check.id === 'check-context' && context.length > 5) passed = true;
+        else if (check.id === 'check-constraints' && constraints.length > 5) passed = true;
+        else if (check.id === 'check-dod' && dod.length > 5) passed = true;
+        else if (check.id === 'check-brief' && combinedPrompt.length > 20) passed = true;
+        else if (check.id === 'check-media' && combinedPrompt.length > 20) passed = true;
+        else if (check.id === 'check-brief-role' && (text.includes('менеджер') || text.includes('роль') || text.includes('продакт'))) passed = true;
+        else if (check.id === 'check-brief-scenario') {
+          passed = text.includes('сценарий') || text.includes('шаги');
+          evidence = passed ? 'Сценарий описан' : 'Опишите главный сценарий использования';
+        }
+        else if (check.id === 'check-screen-map') {
+          passed = text.includes('экран') || text.includes('кнопк');
+          evidence = passed ? 'Упомянуты элементы интерфейса' : 'Опишите экраны или кнопки';
+        }
+        else if (check.id === 'check-agents-md') {
+          passed = text.includes('агент') || text.includes('правила');
+          evidence = passed ? 'Роль агента и правила описаны' : 'Укажите правила для агента';
+        }
+        else if (check.id === 'check-speech-prompt') {
+          passed = (text.includes('5 слайдов') || text.includes('пять слайдов')) && text.includes('речь');
+          evidence = passed ? 'Запрошены 5 слайдов и речь' : 'Укажите требование: 5 слайдов и текст речи';
+        }
+        else if (combinedPrompt.length > 10) passed = true;
+        
+        results.push({
+          id: check.id,
+          label: check.label,
+          passed,
+          detail: passed ? undefined : (evidence || check.failHint)
+        });
+      }
+      onMissionCheckResults?.(results);
+      const allPassed = results.every(r => r.passed);
+      if (allPassed) {
+        onMissionPassed?.();
+      } else {
+        alert('Не все локальные проверки пройдены! Проверьте подсказки слева и обновите промпт.');
+        return;
+      }
     }
 
     setSimulating(true);
@@ -69,7 +125,7 @@ ${dod || '[Не заполнено]'}`;
         kind: 'prompt',
         weekId,
         weekTitle,
-        rubric: practice.checklist,
+        rubric: practice.checklist || [],
         payload: { prompt: combinedPrompt },
         staticResults: [],
         functionalResults: [],

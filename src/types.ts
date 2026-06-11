@@ -43,17 +43,17 @@ export interface PracticeTask {
   mode?: PracticeMode;
   durationMinutes: number;
   description: string;
-  steps: string[];
-  expectedOutput: string;
-  initialPrompt: {
+  steps?: string[];
+  expectedOutput?: string;
+  initialPrompt?: {
     goal: string;
     context: string;
     constraints: string;
     dod: string;
   };
-  hints: string[];
-  checklist: string[];
-  simulationFeedback: {
+  hints?: string[];
+  checklist?: string[];
+  simulationFeedback?: {
     score: number;
     comments: string[];
     agentResponse: string;
@@ -73,6 +73,7 @@ export type MissionType =
   | 'local-storage'
   | 'xss-lab'
   | 'quota-deploy'
+  | 'ai-helper-brief'
   | 'ai-media-prompt'
   | 'mvp-scenario';
 
@@ -164,6 +165,9 @@ export interface ResourceLink {
   description: string;
   url: string;
   category: ResourceCategory;
+  weekIds?: number[];
+  missionIds?: string[];
+  level?: 'required' | 'recommended' | 'advanced';
 }
 
 export interface UserProfile {
@@ -203,4 +207,55 @@ export interface DeployedSnapshot {
   js: string;
   createdAt: string;
   weekId?: number;
+}
+
+export type ArtifactType =
+  | 'prompt'
+  | 'canvas'
+  | 'brief'
+  | 'agents-md'
+  | 'screen-map'
+  | 'design-review'
+  | 'snapshot'
+  | 'deploy'
+  | 'test-plan'
+  | 'defense-script';
+
+export interface LearningArtifact {
+  id: string;
+  studentId: string;
+  weekId: number;
+  missionId?: string;
+  type: ArtifactType;
+  title: string;
+  payload: unknown;
+  score?: number;
+  teacherComment?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MissionProgress {
+  studentId: string;
+  weekId: number;
+  missionId: string;
+  stepId: string;
+  status: 'not-started' | 'in-progress' | 'stuck' | 'passed' | 'submitted';
+  hintLevel: number;
+  failedCheckIds: string[];
+  lastActivityAt: string;
+}
+
+export interface HelpRequest {
+  id: string;
+  studentId: string;
+  weekId: number;
+  missionId?: string;
+  stepId?: string;
+  message: string;
+  status: 'open' | 'viewed' | 'answered' | 'closed';
+  snapshotRef?: string;
+  teacherId?: string;
+  teacherComment?: string;
+  createdAt: string;
 }
