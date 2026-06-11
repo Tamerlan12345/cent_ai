@@ -869,26 +869,26 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             «Проверить ДЗ» — ИИ оценит код по критериям DoD (нужно ≥ 80%).
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div className="action-buttons-wrapper">
           {mission && (
             <button
               onClick={handleRunMissionChecks}
               disabled={checkingMission}
-              className="btn btn-secondary"
+              className="btn btn-outline"
               title="Запустить автопроверки текущей миссии"
             >
               <CheckCircle2 size={16} /> {checkingMission ? 'Проверяю...' : 'Проверить миссию'}
             </button>
           )}
           <button onClick={handleInternalDeploy} className="btn btn-secondary" title="Сохранить и открыть /preview/:id">
-            <Rocket size={16} /> Опубликовать в песочнице
+            <Rocket size={16} /> Внутренний деплой
           </button>
-          <button onClick={handleSendHomework} disabled={loadingReview} className="btn btn-primary">
+          <button onClick={handleSendHomework} disabled={loadingReview} className="btn btn-primary btn-large">
             {loadingReview ? (
-              <span>Запрос к ИИ…</span>
+              <span className="pulse-text">Запрос к ИИ…</span>
             ) : (
               <>
-                <Send size={16} /> Проверить ДЗ
+                <Send size={16} /> Отправить на проверку
               </>
             )}
           </button>
