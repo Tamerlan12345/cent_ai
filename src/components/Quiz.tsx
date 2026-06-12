@@ -53,10 +53,27 @@ export const Quiz: React.FC<QuizProps> = ({ questions, weekId, onComplete }) => 
   };
 
   if (quizFinished) {
+    // Цвета конфетти: cyan / purple / green из палитры платформы
+    const confettiColors = ['#00F2FE', '#9B5DE5', '#10B981'];
     return (
       <div className="quiz-finished-card glass-panel glow-border-cyan animate-fade-in">
+        {/* Празднование: CSS-конфетти, чисто визуальный слой */}
+        <div className="quiz-confetti" aria-hidden="true">
+          {Array.from({ length: 18 }, (_, i) => (
+            <span
+              key={i}
+              className="confetti-piece"
+              style={{
+                left: `${(i * 53) % 100}%`,
+                backgroundColor: confettiColors[i % confettiColors.length],
+                animationDelay: `${(i % 6) * 0.18}s`,
+                animationDuration: `${1.8 + (i % 4) * 0.35}s`,
+              }}
+            />
+          ))}
+        </div>
         <Award className="finished-icon animate-bounce" size={48} />
-        <h3>Тест Недели {weekId} Пройден!</h3>
+        <h3 className="finished-title gradient-text">Тест Недели {weekId} Пройден!</h3>
         <p className="finished-score">
           Ваш результат: <strong>{correctAnswersCount}</strong> из <strong>{questions.length}</strong> правильных ответов.
         </p>

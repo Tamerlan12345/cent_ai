@@ -35,6 +35,13 @@
   color: var(--accent-primary);
   width: 28px;
   height: 28px;
+  /* Лёгкое неоновое свечение логотипа */
+  filter: drop-shadow(0 0 6px var(--glow-color));
+  transition: filter 0.3s ease;
+}
+
+.logo-section:hover .logo-icon {
+  filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.45));
 }
 
 .logo-text {
@@ -68,6 +75,27 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+}
+
+/* Неоновое подчёркивание: появляется плавным расширением от центра */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  box-shadow: 0 0 8px var(--glow-color);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-link.active::after {
+  transform: scaleX(1);
 }
 
 .nav-link:hover {

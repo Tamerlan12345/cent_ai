@@ -1,0 +1,237 @@
+/* ============================================================
+   CodeHighlight — окно кода «как в IDE».
+   Неоновая палитра токенов задаётся CSS-переменными,
+   светлая тема переопределяет их через [data-theme="light"].
+   ============================================================ */
+
+.code-highlight {
+  /* Палитра токенов (тёмная тема, неон под cyan #00F2FE / purple #9B5DE5) */
+  --ch-bg: #090d16;
+  --ch-header-bg: rgba(255, 255, 255, 0.03);
+  --ch-border: rgba(255, 255, 255, 0.08);
+  --ch-text: #e2e8f0;
+  --ch-gutter: #4b5563;
+  --ch-line-hover: rgba(255, 255, 255, 0.03);
+  --ch-line-highlight: rgba(0, 242, 254, 0.08);
+  --ch-line-highlight-border: #00f2fe;
+
+  --tok-keyword: #ff7ac6;     /* неоново-розовый */
+  --tok-string: #5ef1c2;      /* неоновая мята */
+  --tok-comment: #5b6478;     /* приглушённый серо-синий */
+  --tok-number: #ffb86c;      /* тёплый янтарь */
+  --tok-function: #00f2fe;    /* фирменный cyan */
+  --tok-tag: #ff7ac6;
+  --tok-attribute: #c89bf5;   /* светлый purple */
+  --tok-property: #7dd3fc;    /* небесно-голубой */
+  --tok-value: #5ef1c2;
+  --tok-operator: #9b5de5;    /* фирменный purple */
+  --tok-punctuation: #8b93a7;
+
+  background: var(--ch-bg);
+  border: 1px solid var(--ch-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md), 0 0 18px var(--glow-color);
+  animation: chAppear 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Светлая тема: окно остаётся читаемым, цвета токенов темнее */
+[data-theme="light"] .code-highlight {
+  --ch-bg: #f8fafc;
+  --ch-header-bg: rgba(15, 23, 42, 0.04);
+  --ch-border: rgba(15, 23, 42, 0.1);
+  --ch-text: #1e293b;
+  --ch-gutter: #94a3b8;
+  --ch-line-hover: rgba(15, 23, 42, 0.04);
+  --ch-line-highlight: rgba(2, 132, 199, 0.1);
+  --ch-line-highlight-border: #0284c7;
+
+  --tok-keyword: #c0257f;
+  --tok-string: #047857;
+  --tok-comment: #94a3b8;
+  --tok-number: #b45309;
+  --tok-function: #0284c7;
+  --tok-tag: #c0257f;
+  --tok-attribute: #7c3aed;
+  --tok-property: #0369a1;
+  --tok-value: #047857;
+  --tok-operator: #7c3aed;
+  --tok-punctuation: #64748b;
+}
+
+/* Тонкое появление: fade + лёгкий подъём */
+@keyframes chAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Шапка окна ── */
+
+.ch-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--ch-header-bg);
+  border-bottom: 1px solid var(--ch-border);
+}
+
+/* Три точки в стиле macOS */
+.ch-dots {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.ch-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.ch-dot.red { background: #ff5f57; }
+.ch-dot.yellow { background: #febc2e; }
+.ch-dot.green { background: #28c840; }
+
+.ch-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Бейдж языка прижимаем вправо */
+.ch-lang-badge {
+  margin-left: auto;
+  padding: 0.125rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--accent-primary);
+  background: rgba(0, 242, 254, 0.08);
+  border: 1px solid rgba(0, 242, 254, 0.2);
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+[data-theme="light"] .ch-lang-badge {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+/* Кнопка «Копировать» */
+.ch-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.625rem;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--ch-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition-fast), border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.ch-copy-btn:hover {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background: rgba(0, 242, 254, 0.06);
+}
+
+.ch-copy-btn.copied {
+  color: var(--accent-success);
+  border-color: var(--accent-success);
+}
+
+/* ── Тело с кодом ── */
+
+.ch-body {
+  margin: 0;
+  padding: 0.75rem 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--ch-text);
+  /* tab-size для сниппетов с табами */
+  tab-size: 2;
+}
+
+.ch-code {
+  display: block;
+  min-width: max-content;
+}
+
+/* Одна строка кода */
+.ch-line {
+  display: flex;
+  padding: 0 0.875rem 0 0;
+  border-left: 2px solid transparent;
+}
+
+.ch-line:hover {
+  background: var(--ch-line-hover);
+}
+
+.ch-line.clickable {
+  cursor: pointer;
+}
+
+/* Подсвеченная строка (проп highlightLine) */
+.ch-line.highlighted {
+  background: var(--ch-line-highlight);
+  border-left-color: var(--ch-line-highlight-border);
+}
+
+/* Номер строки */
+.ch-line-number {
+  flex-shrink: 0;
+  padding: 0 0.875rem 0 0.75rem;
+  text-align: right;
+  color: var(--ch-gutter);
+  user-select: none;
+}
+
+.ch-line.highlighted .ch-line-number {
+  color: var(--ch-line-highlight-border);
+}
+
+.ch-line-content {
+  white-space: pre;
+}
+
+/* ── Цвета токенов ── */
+
+.tok-keyword { color: var(--tok-keyword); }
+.tok-string { color: var(--tok-string); }
+.tok-comment { color: var(--tok-comment); font-style: italic; }
+.tok-number { color: var(--tok-number); }
+.tok-function { color: var(--tok-function); }
+.tok-tag { color: var(--tok-tag); }
+.tok-attribute { color: var(--tok-attribute); }
+.tok-property { color: var(--tok-property); }
+.tok-value { color: var(--tok-value); }
+.tok-operator { color: var(--tok-operator); }
+.tok-punctuation { color: var(--tok-punctuation); }
+
+/* ── Доступность: без анимаций при prefers-reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .code-highlight {
+    animation: none;
+  }
+}

@@ -9,6 +9,7 @@
 //   loop_breaker     — архитектурная заплатка по логу ошибки (тур, шаг 4)
 //   grade_submission — рубричный грейдинг ДЗ; вердикт и запись в submissions
 //                      происходят ЗДЕСЬ (service role), клиенту не доверяем.
+//   explain_slide    — ИИ-учитель: объясняет слайд или строку кода (модель-lite)
 //
 // Secrets: GEMINI_API_KEY (обязателен), GEMINI_MODEL (default gemini-2.5-flash),
 //          GEMINI_MODEL_LITE (default gemini-2.5-flash-lite)
@@ -221,6 +222,42 @@ ${body}
 Не выставляй итоговый балл — его посчитает система. Будь честным: критерий passed только при явном выполнении.`;
 }
 
+function buildExplainPrompt(payload: {
+  title: string;
+  content: string;
+  code_snippet?: string;
+  code_language?: string;
+  focus_line?: { number: number; text: string };
+}): string {
+  const codeBlock = payload.code_snippet
+    ? `\nПример кода на слайде (${payload.code_language || "код"}):\n"""\n${payload.code_snippet}\n"""\n`
+    : "";
+
+  const focusBlock = payload.focus_line
+    ? `\nСтудент кликнул на строку ${payload.focus_line.number}: \`${payload.focus_line.text.trim()}\`
+Объясни ИМЕННО эту строку: что она делает, зачем нужна в этом примере и как связана с соседними строками.`
+    : `\nОбъясни главную мысль слайда целиком.`;
+
+  return `Ты — ИИ-учитель на курсе вайбкодинга Centras CodeAI. Твой студент — взрослый новичок БЕЗ программистского бэкграунда: он не пишет код руками, а ставит задачи ИИ, поэтому ему важно ПОНИМАНИЕ, а не синтаксис.
+
+Слайд «${payload.title}»:
+"""
+${payload.content}
+"""
+${codeBlock}${focusBlock}
+
+Правила ответа:
+- Простой разговорный русский, без жаргона; термин — сразу с бытовой расшифровкой.
+- Объяснение: 3-5 коротких предложений, без markdown-заголовков и списков.
+- analogy: одна яркая бытовая аналогия или мини-вопрос для самопроверки (1-2 предложения).
+
+Верни строго JSON:
+{
+  "explanation": "<объяснение>",
+  "analogy": "<аналогия или вопрос для самопроверки>"
+}`;
+}
+
 // ---------- грейдинг: серверный подсчёт балла ----------
 
 interface CriterionResult {
@@ -301,6 +338,16 @@ serve(async (req) => {
           const raw = await callGemini(model, buildLintPrompt(payload));
           outputChars = raw.length;
           result = parseJsonLoose(raw, { ok: true, issues: [], suggestions: [] });
+          break;
+        }
+        case "explain_slide": {
+          model = GEMINI_MODEL_LITE;
+          const raw = await callGemini(model, buildExplainPrompt(payload));
+          outputChars = raw.length;
+          result = parseJsonLoose(raw, {
+            explanation: raw || "Не удалось получить объяснение. Попробуйте ещё раз.",
+            analogy: "",
+          });
           break;
         }
         case "generate_diff": {

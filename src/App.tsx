@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ModuleTimeline } from './components/ModuleTimeline';
@@ -23,6 +23,7 @@ import './App.css';
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation(); // для плавного перехода между страницами
 
   const [selectedWeekId, setSelectedWeekId] = useState<number>(1);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -137,6 +138,8 @@ function App() {
       />
 
       <div className="content-viewport">
+        {/* key по pathname перезапускает анимацию входа при смене маршрута */}
+        <div key={location.pathname} className="route-transition">
         <Routes>
           {/* ── Home ── */}
           <Route
@@ -404,6 +407,7 @@ function App() {
             }
           />
         </Routes>
+        </div>
       </div>
 
       <footer className="global-footer">

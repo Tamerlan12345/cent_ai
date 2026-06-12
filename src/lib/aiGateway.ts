@@ -152,7 +152,88 @@ function mockGrade(params: GradeParams): GradeResult {
   };
 }
 
+// Словарь эвристик для объяснения строк кода в демо-режиме (без живого ИИ).
+const LINE_EXPLAIN_RULES: Array<{ pattern: RegExp; explain: string }> = [
+  { pattern: /addEventListener\s*\(/, explain: 'Эта строка «подписывается» на событие: когда пользователь что-то сделает (клик, ввод), браузер запустит указанную функцию. Это основа интерактивности.' },
+  { pattern: /querySelector(All)?\s*\(/, explain: 'Здесь мы находим элемент на странице по CSS-селектору — как поиск по адресу. Дальше с найденным элементом можно работать из JS.' },
+  { pattern: /\bconst\s+/, explain: '`const` создаёт «коробку» с именем для значения, которое нельзя перезаписать. Так код защищён от случайных изменений.' },
+  { pattern: /\blet\s+/, explain: '`let` создаёт переменную, значение которой можно менять позже — например, счётчик или текущее состояние.' },
+  { pattern: /\bfunction\b|=>\s*[{(]?/, explain: 'Это объявление функции — именованный «рецепт» из шагов, который можно запускать сколько угодно раз.' },
+  { pattern: /\breturn\b/, explain: '`return` отдаёт результат наружу и завершает функцию. Всё, что после него внутри функции, уже не выполнится.' },
+  { pattern: /\bif\s*\(/, explain: 'Условие: код внутри выполнится только если выражение в скобках истинно. Так программа «принимает решения».' },
+  { pattern: /\bfor\b|\bwhile\b|\.map\s*\(|\.forEach\s*\(/, explain: 'Это цикл/перебор: одно и то же действие повторяется для каждого элемента, чтобы не копировать код руками.' },
+  { pattern: /fetch\s*\(|await\b/, explain: 'Здесь происходит асинхронная операция (например, запрос к серверу): код «ждёт» ответ, не замораживая страницу.' },
+  { pattern: /localStorage/, explain: '`localStorage` — маленькое хранилище в браузере: данные переживут перезагрузку страницы, но живут только на этом устройстве.' },
+  { pattern: /innerHTML|textContent/, explain: 'Эта строка меняет содержимое элемента на странице — так JS «рисует» новые данные для пользователя.' },
+  { pattern: /console\.(log|error|warn)/, explain: '`console.log` — фонарик разработчика: выводит значение в консоль браузера (F12), чтобы понять, что происходит внутри.' },
+  { pattern: /<(div|section|main|header|footer|nav|article)\b/, explain: 'Это структурный HTML-тег — «коробка» для группировки содержимого. Сама по себе невидима, но задаёт каркас страницы.' },
+  { pattern: /<(button|input|form|select|textarea)\b/, explain: 'Интерактивный HTML-элемент: с ним пользователь взаимодействует напрямую, а JS слушает его события.' },
+  { pattern: /class\s*=|className/, explain: 'Атрибут class вешает на элемент «ярлык», по которому CSS применит стили, а JS сможет найти элемент.' },
+  { pattern: /display\s*:\s*(flex|grid)/, explain: 'Включается раскладка flex/grid — элемент становится «умным контейнером», который сам распределяет детей по строкам и колонкам.' },
+  { pattern: /:\s*hover|transition|animation/, explain: 'Это про «жизнь» интерфейса: стиль при наведении или плавная анимация. Маленькая деталь, которая делает UI приятным.' },
+];
+
+function mockExplain(params: {
+  title: string;
+  content: string;
+  focusLine?: { number: number; text: string };
+}): ExplainResult {
+  if (params.focusLine) {
+    const line = params.focusLine.text.trim();
+    const rule = LINE_EXPLAIN_RULES.find((r) => r.pattern.test(line));
+    const base = rule
+      ? rule.explain
+      : 'Эта строка — часть общей логики примера. Прочитайте её слева направо: что берём, что делаем, куда кладём результат.';
+    return {
+      explanation: `Строка ${params.focusLine.number}: \`${line.slice(0, 80)}\`\n\n${base}`,
+      analogy: 'Совет: выделяйте в каждой строке «глагол» (что делаем) и «существительное» (с чем делаем) — так читается любой код.',
+    };
+  }
+
+  const firstSentence = params.content.split(/(?<=[.!?])\s+/)[0] || params.content;
+  return {
+    explanation: [
+      `Простыми словами: ${firstSentence}`,
+      '',
+      'Зачем это вам: в вайб-кодинге вы не пишете код руками, но должны понимать идею — тогда вы сможете точно ставить задачу ИИ и проверять результат.',
+      '',
+      'Мини-проверка себя: перескажите мысль слайда одним предложением, как будто объясняете другу.',
+    ].join('\n'),
+    analogy: 'Подключите Supabase + функцию ai-gateway — и здесь будет живое объяснение от Gemini под ваш уровень.',
+  };
+}
+
 // ---------------- Публичное API ----------------
+
+export interface ExplainResult {
+  explanation: string;
+  analogy?: string;
+}
+
+/** ИИ-учитель: объясняет слайд или конкретную строку кода простым языком. */
+export async function explainSlide(params: {
+  title: string;
+  content: string;
+  codeSnippet?: string;
+  codeLanguage?: string;
+  focusLine?: { number: number; text: string };
+}): Promise<ExplainResult> {
+  if (isRealSupabaseConfigured) {
+    try {
+      return await invokeGateway<ExplainResult>('explain_slide', {
+        title: params.title,
+        content: params.content,
+        code_snippet: params.codeSnippet,
+        code_language: params.codeLanguage,
+        focus_line: params.focusLine,
+      });
+    } catch (e) {
+      console.warn('ai-gateway explain недоступен, локальное объяснение:', e);
+    }
+  }
+  await delay(600);
+  return mockExplain(params);
+}
 
 export async function lintPrompt(params: {
   prompt: string;

@@ -2,10 +2,37 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, AlertTriangle, CheckCircle,
-  Code, BookOpen, Lightbulb, Zap, ArrowRight
+  BookOpen, Lightbulb, Zap, ArrowRight, Sparkles, X
 } from 'lucide-react';
 import type { CourseModule } from '../types';
+import { CodeHighlight } from './CodeHighlight';
+import { explainSlide } from '../lib/aiGateway';
+import type { ExplainResult } from '../lib/aiGateway';
 import './SlideDeck.css';
+
+/** Печатающийся текст — эффект «ИИ объясняет вживую». */
+const Typewriter: React.FC<{ text: string }> = ({ text }) => {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    setShown(0);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      setShown(text.length);
+      return;
+    }
+    const timer = setInterval(() => {
+      setShown((n) => {
+        if (n >= text.length) {
+          clearInterval(timer);
+          return n;
+        }
+        return n + 3;
+      });
+    }, 16);
+    return () => clearInterval(timer);
+  }, [text]);
+  return <span>{text.slice(0, shown)}</span>;
+};
 
 interface SlideDeckProps {
   modules: CourseModule[];
@@ -23,9 +50,49 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   const [animClass, setAnimClass] = useState('slide-enter-right');
   const dirRef = useRef<'next' | 'prev'>('next');
 
+  // ── ИИ-учитель ──
+  const [aiResult, setAiResult] = useState<ExplainResult | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiFocusLine, setAiFocusLine] = useState<number | null>(null);
+
   const activeModule = modules.find((m) => m.id === selectedWeekId) || modules[0];
   const activeSlide = activeModule.slides[currentSlideIndex] || activeModule.slides[0];
   const progress = ((currentSlideIndex + 1) / activeModule.slides.length) * 100;
+
+  // Сброс ИИ-панели при смене слайда/недели
+  useEffect(() => {
+    setAiResult(null);
+    setAiLoading(false);
+    setAiFocusLine(null);
+  }, [currentSlideIndex, selectedWeekId]);
+
+  const askAi = async (focusLine?: { number: number; text: string }) => {
+    if (aiLoading) return;
+    setAiLoading(true);
+    setAiFocusLine(focusLine?.number ?? null);
+    try {
+      const res = await explainSlide({
+        title: activeSlide.title,
+        content: activeSlide.content,
+        codeSnippet: activeSlide.codeSnippet,
+        codeLanguage: activeSlide.codeLanguage,
+        focusLine,
+      });
+      setAiResult(res);
+    } catch {
+      setAiResult({
+        explanation: 'Не получилось связаться с ИИ-учителем. Попробуйте ещё раз чуть позже.',
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleCodeLineClick = (line: number) => {
+    const text = (activeSlide.codeSnippet || '').split('\n')[line - 1] ?? '';
+    if (!text.trim()) return;
+    void askAi({ number: line, text });
+  };
 
   const triggerAnim = (dir: 'next' | 'prev') => {
     dirRef.current = dir;
@@ -151,13 +218,17 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
             <div className="slide-content code-content-wrapper">
               <p className="compare-intro">{activeSlide.content}</p>
               {activeSlide.codeSnippet && (
-                <div className="code-snippet-box">
-                  <div className="code-box-header">
-                    <Code size={14} />
-                    <span>{activeSlide.codeLanguage || 'Пример кода'}</span>
-                  </div>
-                  <pre className="code-block"><code>{activeSlide.codeSnippet}</code></pre>
-                </div>
+                <>
+                  <CodeHighlight
+                    code={activeSlide.codeSnippet}
+                    language={activeSlide.codeLanguage}
+                    highlightLine={aiFocusLine}
+                    onLineClick={handleCodeLineClick}
+                  />
+                  <p className="ai-line-hint">
+                    <Sparkles size={12} /> Кликните по строке кода — ИИ объяснит, что она делает
+                  </p>
+                </>
               )}
             </div>
           )}
@@ -255,6 +326,51 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
                 <h3>Готовы применить знания?</h3>
                 <p>Этот модуль содержит практику для закрепления материала.</p>
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── ИИ-учитель ── */}
+        <div className="ai-teacher-zone">
+          {!aiResult && !aiLoading && (
+            <button className="ai-explain-btn" onClick={() => void askAi()}>
+              <Sparkles size={15} />
+              Объясни проще
+            </button>
+          )}
+
+          {aiLoading && (
+            <div className="ai-teacher-panel loading glass-panel">
+              <div className="ai-teacher-header">
+                <Sparkles size={16} className="ai-icon-pulse" />
+                <span>ИИ-учитель думает…</span>
+              </div>
+              <div className="ai-thinking-dots">
+                <span /><span /><span />
+              </div>
+            </div>
+          )}
+
+          {aiResult && !aiLoading && (
+            <div className="ai-teacher-panel glass-panel glow-border-purple">
+              <div className="ai-teacher-header">
+                <Sparkles size={16} />
+                <span>{aiFocusLine ? `ИИ-учитель · строка ${aiFocusLine}` : 'ИИ-учитель'}</span>
+                <button
+                  className="ai-close-btn"
+                  onClick={() => {
+                    setAiResult(null);
+                    setAiFocusLine(null);
+                  }}
+                  aria-label="Закрыть объяснение"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <p className="ai-teacher-text">
+                <Typewriter text={aiResult.explanation} />
+              </p>
+              {aiResult.analogy && <p className="ai-teacher-analogy">{aiResult.analogy}</p>}
             </div>
           )}
         </div>

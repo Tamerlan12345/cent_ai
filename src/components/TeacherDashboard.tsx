@@ -9,6 +9,7 @@ import {
   upsertQuota,
 } from '../lib/sandboxStore';
 import type { ResourceQuota, DeployedSnapshot } from '../types';
+import { CodeHighlight } from './CodeHighlight';
 import './TeacherDashboard.css';
 
 interface StudentProfile {
@@ -459,26 +460,29 @@ export const TeacherDashboard: React.FC = () => {
                     <div className="code-split-block">
                       {selected.payload.files.html && (
                         <div className="code-file-view">
-                          <span className="file-tag">index.html</span>
-                          <pre className="code-block">
-                            <code>{selected.payload.files.html}</code>
-                          </pre>
+                          <CodeHighlight
+                            code={selected.payload.files.html}
+                            language="html"
+                            title="index.html"
+                          />
                         </div>
                       )}
                       {selected.payload.files.css && (
                         <div className="code-file-view">
-                          <span className="file-tag">styles.css</span>
-                          <pre className="code-block">
-                            <code>{selected.payload.files.css}</code>
-                          </pre>
+                          <CodeHighlight
+                            code={selected.payload.files.css}
+                            language="css"
+                            title="styles.css"
+                          />
                         </div>
                       )}
                       {selected.payload.files.js && (
                         <div className="code-file-view">
-                          <span className="file-tag">app.js</span>
-                          <pre className="code-block">
-                            <code>{selected.payload.files.js}</code>
-                          </pre>
+                          <CodeHighlight
+                            code={selected.payload.files.js}
+                            language="js"
+                            title="app.js"
+                          />
                         </div>
                       )}
                     </div>

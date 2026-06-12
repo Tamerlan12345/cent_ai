@@ -42,7 +42,18 @@
 .timeline-item {
   position: relative;
   z-index: 2;
+  /* Каскадное появление карточек модулей */
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+.timeline-item:nth-child(2) { animation-delay: 0.1s; }
+.timeline-item:nth-child(3) { animation-delay: 0.2s; }
+.timeline-item:nth-child(4) { animation-delay: 0.3s; }
+.timeline-item:nth-child(5) { animation-delay: 0.4s; }
+.timeline-item:nth-child(6) { animation-delay: 0.5s; }
+.timeline-item:nth-child(7) { animation-delay: 0.6s; }
+.timeline-item:nth-child(8) { animation-delay: 0.7s; }
+.timeline-item:nth-child(9) { animation-delay: 0.8s; }
 
 .timeline-node {
   position: absolute;
@@ -94,7 +105,10 @@
 }
 
 .timeline-content-card:hover {
-  transform: translateX(6px);
+  /* Подъём + неоновая рамка и свечение */
+  transform: translateX(6px) translateY(-3px);
+  border-color: rgba(0, 242, 254, 0.35);
+  box-shadow: 0 10px 32px var(--glow-color), 0 4px 18px var(--glow-purple);
 }
 
 .timeline-item.next .timeline-content-card {
