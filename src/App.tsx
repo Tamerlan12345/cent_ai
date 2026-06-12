@@ -18,8 +18,81 @@ import { supabase } from './supabaseClient';
 import { loadCourseModules } from './lib/contentService';
 import { loadProgress, saveWeekCompleted, saveChecklistItem } from './lib/progressService';
 import type { UserProfile, CourseModule } from './types';
-import { Info, CheckSquare, GraduationCap, Lock, AlertOctagon } from 'lucide-react';
+import {
+  AlertOctagon,
+  Bot,
+  CheckSquare,
+  GraduationCap,
+  Home,
+  Lock,
+  Route as RouteIcon,
+  Send,
+  Target,
+} from 'lucide-react';
 import './App.css';
+
+const weeklyPracticePlan = [
+  {
+    weekId: 1,
+    lesson: 'Собрать идею MVP, AI-наставника и первый Canvas',
+    artifact: 'vibe-canvas.md',
+    handoff: {
+      tool: 'Gemini / Gem',
+      action: 'Создайте личного MVP-наставника и попросите его задать 10 вопросов по идее.',
+      bringBack: 'Готовый Canvas и 1 выбранная идея.',
+    },
+    homework: [
+      'Выбрать одну идею MVP из 10 вариантов',
+      'Заполнить Vibe Coding Canvas',
+      'Описать главный сценарий пользователя в 5 шагах',
+    ],
+  },
+  {
+    weekId: 2,
+    lesson: 'Превратить Canvas в PROJECT_BRIEF, Screen Map и AGENTS.md',
+    artifact: 'PROJECT_BRIEF.md + AGENTS.md',
+    handoff: {
+      tool: 'Antigravity',
+      action: 'Откройте новый проект, вставьте brief и попросите агента собрать структуру файлов.',
+      bringBack: 'PROJECT_BRIEF.md, Screen Map и AGENTS.md.',
+    },
+    homework: [
+      'Собрать контекстный пакет проекта',
+      'Проверить, что MVP ограничен 3 функциями',
+      'Подготовить первый запрос для Antigravity',
+    ],
+  },
+  {
+    weekId: 3,
+    lesson: 'Собрать первый рабочий сценарий MVP в IDE',
+    artifact: 'Рабочий MVP-снапшот',
+    handoff: {
+      tool: 'Antigravity Manager',
+      action: 'Повторите главный экран через Builder-агента и попросите Reviewer объяснить diff.',
+      bringBack: 'Снапшот, скриншот и 3 вывода по работе агента.',
+    },
+    homework: [
+      'Повторить главный экран в Antigravity',
+      'Сделать snapshot/commit после рабочего состояния',
+      'Записать 3 пункта, где агент ошибся или помог',
+    ],
+  },
+  {
+    weekId: 4,
+    lesson: 'Закрыть QA, безопасность, внутренний deploy и защиту',
+    artifact: 'deploy-link + defense-script',
+    handoff: {
+      tool: 'Gemini / GPT / Antigravity',
+      action: 'Запустите QA/Security-роль, затем попросите Demo Coach собрать речь защиты.',
+      bringBack: 'Ссылка на preview, Quality Gate и 3-минутная речь.',
+    },
+    homework: [
+      'Прогнать финальный Quality Gate',
+      'Подготовить 3-минутную речь защиты',
+      'Сохранить roadmap следующих 3 улучшений',
+    ],
+  },
+] as const;
 
 function App() {
   const navigate = useNavigate();
@@ -47,6 +120,15 @@ function App() {
       setChecklist(p.checklist);
     });
   }, [userProfile?.id]);
+
+  useEffect(() => {
+    const weekParam = new URLSearchParams(location.search).get('week');
+    const week = weekParam ? Number(weekParam) : NaN;
+    if (Number.isInteger(week) && week >= 1 && week <= 4 && week !== selectedWeekId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedWeekId(week);
+    }
+  }, [location.search, selectedWeekId]);
 
   // Restore auth session
   useEffect(() => {
@@ -94,7 +176,7 @@ function App() {
 
   const handleSelectWeek = (weekId: number, tabRoute: string) => {
     setSelectedWeekId(weekId);
-    navigate(tabRoute);
+    navigate(`${tabRoute}?week=${weekId}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -111,7 +193,10 @@ function App() {
   };
 
   const activeModule = courseModules.find((m) => m.id === selectedWeekId) || courseModules[0];
+  const activePracticePlan =
+    weeklyPracticePlan.find((plan) => plan.weekId === selectedWeekId) ?? weeklyPracticePlan[0];
   const isWeekLocked = userProfile?.role === 'student' && selectedWeekId > activeWeek;
+  const authReturnTo = (location.state as { returnTo?: string } | null)?.returnTo;
 
   const lockedScreen = (
     <div className="locked-week-container glass-panel glow-border-purple text-center animate-fade-in">
@@ -151,6 +236,7 @@ function App() {
                   modules={courseModules}
                   completedWeeks={completedWeeks}
                   onSelectWeek={handleSelectWeek}
+                  activeWeek={userProfile?.role === 'student' ? activeWeek : undefined}
                 />
               </main>
             }
@@ -171,6 +257,7 @@ function App() {
                   modules={courseModules}
                   completedWeeks={completedWeeks}
                   onSelectWeek={handleSelectWeek}
+                  activeWeek={userProfile?.role === 'student' ? activeWeek : undefined}
                 />
               </main>
             }
@@ -181,7 +268,7 @@ function App() {
             path="/slides"
             element={
               !userProfile ? (
-                <Navigate to="/auth" replace />
+                <Navigate to="/auth" replace state={{ returnTo: `${location.pathname}${location.search}` }} />
               ) : (
                 <main className="main-content">
                   {isWeekLocked ? (
@@ -203,19 +290,31 @@ function App() {
             path="/practice"
             element={
               !userProfile ? (
-                <Navigate to="/auth" replace />
+                <Navigate to="/auth" replace state={{ returnTo: `${location.pathname}${location.search}` }} />
               ) : (
                 <main className="main-content practice-workspace-page">
                   <div className="practice-header-section">
-                    <h2 className="practice-page-title">Практическая Инженерная Лаборатория</h2>
+                    <div className="practice-title-block">
+                      <span className="practice-page-eyebrow">
+                        4 недели · 4 занятия · один MVP
+                      </span>
+                      <h2 className="practice-page-title">MVP-мастер</h2>
+                      <p className="practice-page-subtitle">
+                        Практика встроена в маршрут: на занятии делаем короткие миссии,
+                        на неделю остается только понятный артефакт проекта.
+                      </p>
+                    </div>
                     <div className="practice-week-nav">
                       {courseModules.map((m) => {
                         const locked = userProfile.role === 'student' && m.id > activeWeek;
                         return (
                           <button
                             key={m.id}
+                            type="button"
+                            disabled={locked}
                             onClick={() => {
                               setSelectedWeekId(m.id);
+                              navigate(`/practice?week=${m.id}`, { replace: true });
                               window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
                             className={`practice-week-btn ${m.id === selectedWeekId ? 'active' : ''} ${locked ? 'locked' : ''}`}
@@ -227,15 +326,65 @@ function App() {
                     </div>
                   </div>
 
+                  <div className="practice-path-strip glass-panel">
+                    {weeklyPracticePlan.map((plan) => {
+                      const locked = userProfile.role === 'student' && plan.weekId > activeWeek;
+                      return (
+                        <button
+                          key={plan.weekId}
+                          type="button"
+                          disabled={locked}
+                          onClick={() => {
+                            setSelectedWeekId(plan.weekId);
+                            navigate(`/practice?week=${plan.weekId}`, { replace: true });
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className={`practice-path-step ${plan.weekId === selectedWeekId ? 'active' : ''} ${
+                            completedWeeks.includes(plan.weekId) ? 'completed' : ''
+                          } ${locked ? 'locked' : ''}`}
+                        >
+                          <span className="practice-path-number">{locked ? <Lock size={13} /> : plan.weekId}</span>
+                          <span className="practice-path-copy">
+                            <strong>{plan.artifact}</strong>
+                            <small>{locked ? `Откроется после недели ${activeWeek}` : plan.lesson}</small>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
                   {isWeekLocked ? (
                     lockedScreen
                   ) : activeModule ? (
-                    <div className="workspace-grid">
-                      <div className="workspace-left">
+                    <>
+                      <div className="practice-flow-rail glass-panel">
+                        <div>
+                          <span>1</span>
+                          <strong>Миссии</strong>
+                          <small>Делаем на занятии</small>
+                        </div>
+                        <div>
+                          <span>2</span>
+                          <strong>Домашка</strong>
+                          <small>Один недельный артефакт</small>
+                        </div>
+                        <div>
+                          <span>3</span>
+                          <strong>Quiz</strong>
+                          <small>Порог зачёта 80%</small>
+                        </div>
+                      </div>
+
+                      <div className="workspace-grid">
+                        <div className="workspace-left">
                         <div className="task-detail-card glass-panel">
                           <div className="card-header-iconified">
-                            <Info className="card-header-icon" />
-                            <h3>Задание: {activeModule.practice.title}</h3>
+                            <Target className="card-header-icon" />
+                            <h3>Занятие: {activeModule.practice.title}</h3>
+                          </div>
+                          <div className="practice-lesson-summary">
+                            <RouteIcon size={16} />
+                            <span>{activePracticePlan.lesson}</span>
                           </div>
                           <p className="task-long-desc">{activeModule.practice.description}</p>
                           <div className="task-steps">
@@ -256,31 +405,84 @@ function App() {
                           </div>
                         </div>
 
-                        <div className="checklist-card glass-panel">
+                        <div className="weekly-homework-card glass-panel">
                           <div className="card-header-iconified">
-                            <CheckSquare className="card-header-icon" />
-                            <h3>Чек-лист готовности к ревью (DoD)</h3>
+                            <Home className="card-header-icon" />
+                            <h3>Домашка на неделю</h3>
                           </div>
-                          <div className="checklist-items-container">
-                            {(activeModule.practice.checklist || []).map((item, idx) => {
-                              const itemId = `${selectedWeekId}-check-${idx}`;
-                              const isChecked = !!checklist[itemId];
-                              return (
-                                <label
-                                  key={idx}
-                                  className={`checklist-item-row ${isChecked ? 'checked' : ''}`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={() => handleCheckItem(itemId)}
-                                  />
-                                  <span>{item}</span>
-                                </label>
-                              );
-                            })}
-                          </div>
+                          <p>
+                            Не больше одного артефакта: <strong>{activePracticePlan.artifact}</strong>.
+                          </p>
+                          <ul>
+                            {activePracticePlan.homework.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
                         </div>
+
+                        <div className="external-handoff-card glass-panel">
+                          <div className="card-header-iconified">
+                            <Bot className="card-header-icon" />
+                            <h3>Связка с внешним инструментом</h3>
+                          </div>
+                          <div className="handoff-route">
+                            <div>
+                              <span>1 · Здесь</span>
+                              <p>Пройдите миссии недели в MVP-мастере.</p>
+                            </div>
+                            <div>
+                              <span>2 · {activePracticePlan.handoff.tool}</span>
+                              <p>{activePracticePlan.handoff.action}</p>
+                            </div>
+                            <div>
+                              <span>3 · Артефакт</span>
+                              <p>{activePracticePlan.handoff.bringBack}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm handoff-copy-btn"
+                            onClick={() => {
+                              const text = [
+                                `Неделя ${selectedWeekId}: ${activePracticePlan.lesson}`,
+                                `Инструмент: ${activePracticePlan.handoff.tool}`,
+                                `Сделать: ${activePracticePlan.handoff.action}`,
+                                `Вернуть в курс: ${activePracticePlan.handoff.bringBack}`,
+                              ].join('\n');
+                              void navigator.clipboard.writeText(text);
+                            }}
+                          >
+                            <Send size={13} /> Скопировать шаг для ИИ
+                          </button>
+                        </div>
+
+                        {!!activeModule.practice.checklist?.length && (
+                          <div className="checklist-card glass-panel">
+                            <div className="card-header-iconified">
+                              <CheckSquare className="card-header-icon" />
+                              <h3>Чек-лист готовности к ревью (DoD)</h3>
+                            </div>
+                            <div className="checklist-items-container">
+                              {activeModule.practice.checklist.map((item, idx) => {
+                                const itemId = `${selectedWeekId}-check-${idx}`;
+                                const isChecked = !!checklist[itemId];
+                                return (
+                                  <label
+                                    key={idx}
+                                    className={`checklist-item-row ${isChecked ? 'checked' : ''}`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => handleCheckItem(itemId)}
+                                    />
+                                    <span>{item}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="workspace-right">
@@ -294,10 +496,10 @@ function App() {
                             <GraduationCap className="card-header-icon" />
                             <h3>
                               {activeModule.practice.mode === 'mission'
-                                ? 'Mission Workspace'
+                                ? 'MVP-мастер недели'
                                 : activeModule.practice.type === 'prompt'
                                   ? 'Конструктор инженерных запросов'
-                                  : 'IDE Песочница Домашней Работы'}
+                                  : 'IDE проекта'}
                             </h3>
                           </div>
                           {activeModule.practice.mode === 'mission' ? (
@@ -338,7 +540,8 @@ function App() {
                           />
                         </div>
                       </div>
-                    </div>
+                      </div>
+                    </>
                   ) : null}
                 </main>
               )
@@ -363,7 +566,7 @@ function App() {
                 <Auth
                   onAuthSuccess={(profile) => {
                     setUserProfile(profile);
-                    navigate('/');
+                    navigate(authReturnTo ?? '/');
                   }}
                 />
               </main>
@@ -375,7 +578,7 @@ function App() {
             path="/teacher"
             element={
               !userProfile ? (
-                <Navigate to="/auth" replace />
+                <Navigate to="/auth" replace state={{ returnTo: `${location.pathname}${location.search}` }} />
               ) : userProfile.role !== 'teacher' && userProfile.role !== 'admin' ? (
                 <div className="not-found-page text-center">
                   <AlertOctagon size={48} className="error-color" />

@@ -1698,14 +1698,15 @@ try {
               title: 'Рендер привычек', 
               target: 'js', 
               instruction: 'Напишите JS логику, которая добавляет привычки в список.',
-              checkIds: [],
+              checkIds: ['func-add-habit'],
               hints: ['Слушайте событие submit', 'Используйте preventDefault', 'Добавляйте HTML в habits-list'],
               doneText: 'Рендер работает.'
             }
           ],
           checks: [
             { id: 'html-form', kind: 'selector', label: 'Существует форма habit-form', selector: '#habit-form', required: true, failHint: 'Добавьте <form id="habit-form">' },
-            { id: 'html-list', kind: 'selector', label: 'Существует контейнер habits-list', selector: '#habits-list', required: true, failHint: 'Добавьте <div id="habits-list">' }
+            { id: 'html-list', kind: 'selector', label: 'Существует контейнер habits-list', selector: '#habits-list', required: true, failHint: 'Добавьте <div id="habits-list">' },
+            { id: 'func-add-habit', kind: 'functional', label: 'Форма добавляет привычку в список', script: 'const form = document.querySelector("#habit-form"); const input = form?.querySelector("input"); const before = api.text("#habits-list"); if (!form || !input) return false; input.value = "Пить воду"; form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); const after = api.text("#habits-list"); return after !== before && after.includes("Пить воду");', required: true, failHint: 'После submit новая привычка должна появиться внутри #habits-list.' }
           ]
         }
       ]
@@ -2161,7 +2162,7 @@ try {
           starterFiles: {
             html: `<div class="sandbox-app">\n  <div id="target"></div>\n</div>`,
             css: `.sandbox-app { padding: 2rem; color: white; }`,
-            js: `const input = "<img src=x onerror=alert('XSS!')>";\n// Задача: реализовать функцию escapeHtml и безопасно вывести input\ndocument.getElementById('target').innerHTML = input;`
+            js: `const input = "<img src=x onerror=alert('XSS!')>";\n// Задача: реализовать защитную функцию и безопасно вывести input\ndocument.getElementById('target').innerHTML = input;`
           },
           steps: [
             {
@@ -2175,7 +2176,7 @@ try {
             }
           ],
           checks: [
-            { id: 'check-xss-escaped', label: 'XSS уязвимость устранена', required: true, kind: 'js-pattern', pattern: 'escapeHtml', failHint: 'Оберните ввод в функцию escapeHtml' }
+            { id: 'check-xss-escaped', label: 'XSS уязвимость устранена', required: true, kind: 'js-pattern', pattern: 'function\\s+escapeHtml[\\s\\S]*innerHTML\\s*=\\s*escapeHtml\\(', failHint: 'Создайте функцию escapeHtml и передайте через неё input перед записью в innerHTML.' }
           ],
           agentInstructions: [
             { agentName: 'Security QA', skillName: 'PenTest', instruction: 'Проверить наличие вызова escapeHtml при обновлении DOM.' }

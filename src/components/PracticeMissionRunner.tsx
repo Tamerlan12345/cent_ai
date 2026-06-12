@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Bot, CheckCircle2, Circle, Lightbulb, LockOpen, Target } from 'lucide-react';
+import { Bot, CheckCircle2, Circle, Clock, Lightbulb, LockOpen, Target } from 'lucide-react';
 import { CodeEditor } from './CodeEditor';
 import { PromptBuilder } from './PromptBuilder';
 import type { CheckResult } from '../lib/grading';
@@ -21,11 +21,14 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
   onHomeworkApproved,
   userProfile,
 }) => {
-  const mission = practice.missions?.[0];
+  const missions = practice.missions ?? [];
+  const [activeMissionIndex, setActiveMissionIndex] = useState(0);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [hintLevel, setHintLevel] = useState(0);
   const [checkResults, setCheckResults] = useState<CheckResult[]>([]);
-  const [sandboxUnlocked, setSandboxUnlocked] = useState(false);
+  const [completedMissionIds, setCompletedMissionIds] = useState<Set<string>>(() => new Set());
+
+  const mission = missions[activeMissionIndex] ?? missions[0];
 
   const passedIds = useMemo(
     () => new Set(checkResults.filter((result) => result.passed).map((result) => result.id)),
@@ -42,9 +45,42 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
     activeStep.checkIds.length > 0 && activeStep.checkIds.every((id) => passedIds.has(id));
   const missionPassed =
     requiredCheckIds.length > 0 && requiredCheckIds.every((id) => passedIds.has(id));
+  const effectiveCompletedMissionIds = new Set(completedMissionIds);
+  if (missionPassed) effectiveCompletedMissionIds.add(mission.id);
+  const activeMissionDone = effectiveCompletedMissionIds.has(mission.id);
+  const allMissionsDone =
+    missions.length > 0 && missions.every((item) => effectiveCompletedMissionIds.has(item.id));
 
   const handleResults = (results: CheckResult[]) => {
     setCheckResults(results);
+    if (!results.length) {
+      setCompletedMissionIds((current) => {
+        if (!current.has(mission.id)) return current;
+        const next = new Set(current);
+        next.delete(mission.id);
+        return next;
+      });
+      return;
+    }
+    const nextPassedIds = new Set(results.filter((result) => result.passed).map((result) => result.id));
+    const requiredIds = mission.checks.filter((check) => check.required).map((check) => check.id);
+    const allRequiredPassed =
+      requiredIds.length > 0 && requiredIds.every((id) => nextPassedIds.has(id));
+    if (allRequiredPassed) {
+      setCompletedMissionIds((current) => {
+        if (current.has(mission.id)) return current;
+        const next = new Set(current);
+        next.add(mission.id);
+        return next;
+      });
+    } else {
+      setCompletedMissionIds((current) => {
+        if (!current.has(mission.id)) return current;
+        const next = new Set(current);
+        next.delete(mission.id);
+        return next;
+      });
+    }
   };
 
   const handleNextStep = () => {
@@ -52,17 +88,71 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
     setHintLevel(0);
   };
 
+  const handleMissionPassed = () => {
+    setCompletedMissionIds((current) => {
+      if (current.has(mission.id)) return current;
+      const next = new Set(current);
+      next.add(mission.id);
+      return next;
+    });
+  };
+
+  const handleHomeworkApproved = () => {
+    const next = new Set(effectiveCompletedMissionIds);
+    next.add(mission.id);
+    setCompletedMissionIds(next);
+    if (missions.every((item) => next.has(item.id))) onHomeworkApproved();
+  };
+
+  const handleSelectMission = (index: number) => {
+    if (index === activeMissionIndex) return;
+    setActiveMissionIndex(index);
+    setActiveStepIndex(0);
+    setHintLevel(0);
+    setCheckResults([]);
+  };
+
   return (
     <div className="mission-runner-wrapper">
       <div className="mission-runner-header glass-panel">
         <div>
-          <span className="mission-eyebrow">Guided IDE mission</span>
+          <span className="mission-eyebrow">Практика внутри недели</span>
           <h3>{mission.title}</h3>
           <p>{mission.intro}</p>
         </div>
         <div className="mission-artifact">
           <Target size={18} />
           <span>{mission.artifact}</span>
+        </div>
+      </div>
+
+      <div className="mission-plan-strip glass-panel">
+        <div className="mission-plan-title">
+          <span>Маршрут занятия</span>
+          <strong>{missions.length} миссии</strong>
+        </div>
+        <div className="mission-plan-list">
+          {missions.map((item, index) => {
+            const done = effectiveCompletedMissionIds.has(item.id);
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`mission-plan-item ${index === activeMissionIndex ? 'active' : ''} ${done ? 'done' : ''}`}
+                onClick={() => handleSelectMission(index)}
+              >
+                <span className="mission-plan-index">
+                  {done ? <CheckCircle2 size={15} /> : index + 1}
+                </span>
+                <span className="mission-plan-copy">
+                  <strong>{item.title}</strong>
+                  <small>
+                    <Clock size={12} /> {item.durationMinutes} мин · {item.artifact}
+                  </small>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -139,10 +229,14 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
             ))}
           </div>
 
-          {missionPassed && (
+          {activeMissionDone && (
             <div className="mission-unlock">
               <LockOpen size={16} />
-              <span>{sandboxUnlocked ? mission.unlockText : 'Миссия пройдена. Свободная песочница доступна после сдачи ДЗ.'}</span>
+              <span>
+                {allMissionsDone
+                  ? 'Все миссии недели готовы. Отправьте один недельный артефакт на проверку.'
+                  : `${mission.unlockText} Выберите следующую миссию в маршруте.`}
+              </span>
             </div>
           )}
         </aside>
@@ -155,9 +249,9 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
               mission={mission}
               weekTitle={weekTitle}
               weekId={weekId}
-              onHomeworkApproved={onHomeworkApproved}
+              onHomeworkApproved={handleHomeworkApproved}
               onMissionCheckResults={handleResults}
-              onMissionPassed={() => setSandboxUnlocked(true)}
+              onMissionPassed={handleMissionPassed}
             />
           ) : (
             <CodeEditor
@@ -168,8 +262,8 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
               initialFiles={mission.starterFiles}
               mission={mission}
               onMissionCheckResults={handleResults}
-              onMissionPassed={() => setSandboxUnlocked(true)}
-              onHomeworkApproved={onHomeworkApproved}
+              onMissionPassed={handleMissionPassed}
+              onHomeworkApproved={handleHomeworkApproved}
               userProfile={userProfile}
             />
           )}

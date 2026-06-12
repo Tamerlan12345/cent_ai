@@ -3,6 +3,8 @@ import { HelpCircle, Check, X, ArrowRight, Award } from 'lucide-react';
 import type { QuizQuestion } from '../types';
 import './Quiz.css';
 
+const PASSING_SCORE = 80;
+
 interface QuizProps {
   questions: QuizQuestion[];
   weekId: number;
@@ -48,38 +50,61 @@ export const Quiz: React.FC<QuizProps> = ({ questions, weekId, onComplete }) => 
       setCurrentQuestionIdx((prev) => prev + 1);
     } else {
       setQuizFinished(true);
-      onComplete(weekId);
+      const scorePercent = Math.round((correctAnswersCount / questions.length) * 100);
+      if (scorePercent >= PASSING_SCORE) onComplete(weekId);
     }
   };
 
+  const handleRetry = () => {
+    setCurrentQuestionIdx(0);
+    setSelectedOptionIdx(null);
+    setIsAnswered(false);
+    setCorrectAnswersCount(0);
+    setQuizFinished(false);
+  };
+
   if (quizFinished) {
+    const scorePercent = Math.round((correctAnswersCount / questions.length) * 100);
+    const passed = scorePercent >= PASSING_SCORE;
     // Цвета конфетти: cyan / purple / green из палитры платформы
     const confettiColors = ['#00F2FE', '#9B5DE5', '#10B981'];
     return (
-      <div className="quiz-finished-card glass-panel glow-border-cyan animate-fade-in">
+      <div className={`quiz-finished-card glass-panel animate-fade-in ${passed ? 'glow-border-cyan' : 'quiz-retry-state'}`}>
         {/* Празднование: CSS-конфетти, чисто визуальный слой */}
-        <div className="quiz-confetti" aria-hidden="true">
-          {Array.from({ length: 18 }, (_, i) => (
-            <span
-              key={i}
-              className="confetti-piece"
-              style={{
-                left: `${(i * 53) % 100}%`,
-                backgroundColor: confettiColors[i % confettiColors.length],
-                animationDelay: `${(i % 6) * 0.18}s`,
-                animationDuration: `${1.8 + (i % 4) * 0.35}s`,
-              }}
-            />
-          ))}
-        </div>
+        {passed && (
+          <div className="quiz-confetti" aria-hidden="true">
+            {Array.from({ length: 18 }, (_, i) => (
+              <span
+                key={i}
+                className="confetti-piece"
+                style={{
+                  left: `${(i * 53) % 100}%`,
+                  backgroundColor: confettiColors[i % confettiColors.length],
+                  animationDelay: `${(i % 6) * 0.18}s`,
+                  animationDuration: `${1.8 + (i % 4) * 0.35}s`,
+                }}
+              />
+            ))}
+          </div>
+        )}
         <Award className="finished-icon animate-bounce" size={48} />
-        <h3 className="finished-title gradient-text">Тест Недели {weekId} Пройден!</h3>
+        <h3 className={passed ? 'finished-title gradient-text' : 'finished-title'}>
+          {passed ? `Тест недели ${weekId} пройден` : 'Нужно закрепить материал'}
+        </h3>
         <p className="finished-score">
-          Ваш результат: <strong>{correctAnswersCount}</strong> из <strong>{questions.length}</strong> правильных ответов.
+          Ваш результат: <strong>{correctAnswersCount}</strong> из <strong>{questions.length}</strong> правильных ответов
+          {' '}({scorePercent}%).
         </p>
         <p className="finished-note">
-          Неделя {weekId} добавлена в ваш общий прогресс обучения. Так держать!
+          {passed
+            ? `Неделя ${weekId} добавлена в общий прогресс.`
+            : `Для зачёта нужно ${PASSING_SCORE}%. Пересмотрите объяснения и пройдите тест ещё раз.`}
         </p>
+        {!passed && (
+          <button type="button" className="btn btn-primary" onClick={handleRetry}>
+            Пересдать тест
+          </button>
+        )}
       </div>
     );
   }

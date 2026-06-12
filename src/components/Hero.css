@@ -74,12 +74,10 @@
 .hero-stagger-4 { animation-delay: 0.45s; }
 .hero-stagger-5 { animation-delay: 0.6s; }
 
-/* ── Пульсирующая CTA-кнопка ── */
-.hero-cta-pulse {
-  animation: pulse 2.4s infinite;
-}
-.hero-cta-pulse:hover {
-  animation-play-state: paused;
+/* ── CTA держим спокойным: внимание создают текст и маршрут, не бесконечный pulse ── */
+.hero-cta-pulse:hover,
+.hero-cta-pulse:focus-visible {
+  transform: translateY(-1px);
 }
 
 .hero-grid {
@@ -243,8 +241,8 @@
     font-size: 2.75rem;
   }
   
-  .hero-visual-container {
-    order: -1;
+  .hero-image-wrapper {
+    max-height: 320px;
   }
 }
 

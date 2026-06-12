@@ -158,6 +158,25 @@
   animation: pulse-border 2s infinite;
 }
 
+.status-locked {
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-color);
+}
+
+.timeline-item.locked .timeline-content-card {
+  opacity: 0.72;
+}
+
+.timeline-item.locked .timeline-node {
+  border-style: dashed;
+}
+
+.timeline-item.locked .btn {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 @keyframes pulse-border {
   0% { border-color: rgba(0, 242, 254, 0.2); }
   50% { border-color: rgba(0, 242, 254, 0.6); }

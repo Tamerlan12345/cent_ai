@@ -45,10 +45,32 @@
   gap: 1rem;
 }
 
+.practice-title-block {
+  max-width: 820px;
+}
+
+.practice-page-eyebrow {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--accent-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
 .practice-page-title {
   font-size: 2rem;
   font-weight: 800;
   color: var(--text-primary);
+  margin: 0;
+}
+
+.practice-page-subtitle {
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.55;
 }
 
 .practice-week-nav {
@@ -85,8 +107,136 @@
   font-weight: 700;
 }
 
+.practice-path-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: var(--bg-card);
+}
+
+.practice-path-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 94px;
+  padding: 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.practice-path-step:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.practice-path-step.active {
+  border-color: var(--accent-primary);
+  background: rgba(0, 242, 254, 0.06);
+  color: var(--text-primary);
+}
+
+.practice-path-step.completed {
+  border-color: rgba(16, 185, 129, 0.28);
+}
+
+.practice-path-step.locked,
+.practice-week-btn:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.practice-path-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  flex: 0 0 1.6rem;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--accent-primary);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.practice-path-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.practice-path-copy strong {
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+
+.practice-path-copy small {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
 [data-theme="light"] .practice-week-btn.active {
   color: #FFFFFF;
+}
+
+.practice-flow-rail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: var(--bg-card);
+}
+
+.practice-flow-rail div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "num title"
+    "num note";
+  column-gap: 0.65rem;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.practice-flow-rail span {
+  grid-area: num;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: rgba(0, 242, 254, 0.08);
+  color: var(--accent-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.practice-flow-rail strong {
+  grid-area: title;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+}
+
+.practice-flow-rail small {
+  grid-area: note;
+  color: var(--text-muted);
+  font-size: 0.76rem;
 }
 
 .workspace-grid {
@@ -106,6 +256,8 @@
 /* Task Detail Cards */
 .task-detail-card,
 .checklist-card,
+.weekly-homework-card,
+.external-handoff-card,
 .prompt-builder-interactive-card {
   padding: 1.75rem;
   background: var(--bg-card);
@@ -132,16 +284,45 @@
   color: var(--accent-secondary);
 }
 
+.weekly-homework-card .card-header-icon {
+  color: var(--accent-success);
+}
+
+.external-handoff-card .card-header-icon {
+  color: var(--accent-primary);
+}
+
 .prompt-builder-interactive-card .card-header-icon {
   color: var(--accent-success);
 }
 
 .task-detail-card h3,
 .checklist-card h3,
+.weekly-homework-card h3,
+.external-handoff-card h3,
 .prompt-builder-interactive-card h3 {
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.practice-lesson-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(0, 242, 254, 0.18);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 242, 254, 0.04);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.practice-lesson-summary svg {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+  color: var(--accent-primary);
 }
 
 .task-long-desc {
@@ -175,6 +356,65 @@
   gap: 0.35rem;
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.weekly-homework-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.weekly-homework-card strong {
+  color: var(--text-primary);
+}
+
+.weekly-homework-card ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.handoff-route {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.handoff-route div {
+  padding: 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .handoff-route div {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.handoff-route span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--accent-primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.handoff-route p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.handoff-copy-btn {
+  align-self: flex-start;
 }
 
 /* Checklist widget */
@@ -257,9 +497,31 @@
 }
 
 @media (max-width: 992px) {
+  .practice-path-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .workspace-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .practice-header-section {
+    align-items: stretch;
+  }
+
+  .practice-path-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .practice-flow-rail {
+    grid-template-columns: 1fr;
+  }
+
+  .practice-path-step {
+    min-height: auto;
   }
 }
 

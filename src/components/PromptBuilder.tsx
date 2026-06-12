@@ -68,6 +68,8 @@ ${dod || '[Не заполнено]'}`;
       return;
     }
 
+    let missionResults: CheckResult[] = [];
+
     if (mission) {
       const results: CheckResult[] = [];
       for (const check of mission.checks) {
@@ -107,6 +109,7 @@ ${dod || '[Не заполнено]'}`;
           detail: passed ? undefined : (evidence || check.failHint)
         });
       }
+      missionResults = results;
       onMissionCheckResults?.(results);
       const allPassed = results.every(r => r.passed);
       if (allPassed) {
@@ -125,9 +128,9 @@ ${dod || '[Не заполнено]'}`;
         kind: 'prompt',
         weekId,
         weekTitle,
-        rubric: practice.checklist || [],
+        rubric: practice.checklist?.length ? practice.checklist : mission?.successCriteria ?? [],
         payload: { prompt: combinedPrompt },
-        staticResults: [],
+        staticResults: missionResults,
         functionalResults: [],
       });
 

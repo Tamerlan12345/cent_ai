@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, AlertTriangle, CheckCircle,
-  BookOpen, Lightbulb, Zap, ArrowRight, Sparkles, X
+  BookOpen, Lightbulb, Zap, ArrowRight, Sparkles, X, Target
 } from 'lucide-react';
 import type { CourseModule } from '../types';
 import { CodeHighlight } from './CodeHighlight';
@@ -12,14 +12,10 @@ import './SlideDeck.css';
 
 /** Печатающийся текст — эффект «ИИ объясняет вживую». */
 const Typewriter: React.FC<{ text: string }> = ({ text }) => {
-  const [shown, setShown] = useState(0);
+  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [shown, setShown] = useState(() => (reducedMotion() ? text.length : 0));
   useEffect(() => {
-    setShown(0);
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
-      setShown(text.length);
-      return;
-    }
+    if (reducedMotion()) return;
     const timer = setInterval(() => {
       setShown((n) => {
         if (n >= text.length) {
@@ -32,6 +28,22 @@ const Typewriter: React.FC<{ text: string }> = ({ text }) => {
     return () => clearInterval(timer);
   }, [text]);
   return <span>{text.slice(0, shown)}</span>;
+};
+
+const getSlideAction = (weekId: number, slideType: CourseModule['slides'][number]['type']) => {
+  const weekActions: Record<number, string> = {
+    1: 'Свяжите идею с вашим будущим MVP: запишите одну боль пользователя и одну фразу, зачем проект нужен.',
+    2: 'Переведите мысль в контекст для агента: что он должен знать до изменения файлов?',
+    3: 'Найдите маленькое действие в интерфейсе: какая кнопка, форма или список должны заработать первыми?',
+    4: 'Проверьте готовность к защите: что сломается, если показать проект прямо сейчас?',
+  };
+
+  if (slideType === 'compare') return 'Сравните плохой и хороший prompt, затем перепишите один свой запрос по сильной версии.';
+  if (slideType === 'code') return 'Кликните по непонятной строке и попросите ИИ объяснить ее простыми словами.';
+  if (slideType === 'checklist') return 'Отметьте 1 пункт, который уже готов, и 1 пункт, который надо закрыть в MVP-мастере.';
+  if (slideType === 'diagram') return 'Назовите текущий шаг маршрута: идея, контекст, сборка, проверка или защита.';
+
+  return weekActions[weekId] ?? 'Сформулируйте один следующий шаг для вашего MVP.';
 };
 
 interface SlideDeckProps {
@@ -58,9 +70,11 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   const activeModule = modules.find((m) => m.id === selectedWeekId) || modules[0];
   const activeSlide = activeModule.slides[currentSlideIndex] || activeModule.slides[0];
   const progress = ((currentSlideIndex + 1) / activeModule.slides.length) * 100;
+  const slideAction = getSlideAction(selectedWeekId, activeSlide.type);
 
   // Сброс ИИ-панели при смене слайда/недели
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAiResult(null);
     setAiLoading(false);
     setAiFocusLine(null);
@@ -123,6 +137,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
 
   const handleWeekChange = (weekId: number) => {
     setSelectedWeekId(weekId);
+    navigate(`/slides?week=${weekId}`, { replace: true });
     setCurrentSlideIndex(0);
     setAnimClass('slide-enter-right');
   };
@@ -169,6 +184,18 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
             {activeSlide.emoji && <span className="slide-title-emoji">{activeSlide.emoji}</span>}
             {activeSlide.title}
           </h2>
+        </div>
+
+        <div className="slide-action-strip">
+          <div className="slide-action-copy">
+            <span>
+              <Target size={14} /> Микро-действие
+            </span>
+            <p>{slideAction}</p>
+          </div>
+          <button type="button" className="slide-action-cta" onClick={() => navigate('/practice')}>
+            В MVP-мастер <ArrowRight size={14} />
+          </button>
         </div>
 
         {/* Slide Body with animation */}
@@ -368,7 +395,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
                 </button>
               </div>
               <p className="ai-teacher-text">
-                <Typewriter text={aiResult.explanation} />
+                <Typewriter key={aiResult.explanation} text={aiResult.explanation} />
               </p>
               {aiResult.analogy && <p className="ai-teacher-analogy">{aiResult.analogy}</p>}
             </div>
@@ -387,9 +414,11 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
 
           <div className="slide-dots">
             {activeModule.slides.map((_, idx) => (
-              <span
+              <button
                 key={idx}
+                type="button"
                 onClick={() => handleDotClick(idx)}
+                aria-label={`Открыть слайд ${idx + 1}`}
                 className={`slide-dot ${idx === currentSlideIndex ? 'active' : ''}`}
               />
             ))}
@@ -400,7 +429,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
               onClick={() => navigate('/practice')}
               className="btn btn-primary slide-nav-btn"
             >
-              Начать практику <ArrowRight size={16} />
+              Открыть MVP-мастер <ArrowRight size={16} />
             </button>
           ) : (
             <button

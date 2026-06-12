@@ -181,6 +181,14 @@
   overflow: hidden;
 }
 
+.quiz-finished-card.quiz-retry-state {
+  border-left: 4px solid var(--accent-error);
+}
+
+.quiz-retry-state .finished-icon {
+  color: var(--accent-error);
+}
+
 /* ── Празднование: конфетти ── */
 .quiz-confetti {
   position: absolute;

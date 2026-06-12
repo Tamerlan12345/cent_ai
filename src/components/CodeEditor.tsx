@@ -8,6 +8,8 @@ import type { CheckResult, FunctionalTest, SandboxFiles } from '../lib/grading';
 import { buildSandboxDoc, runFunctionalTests, useSandboxConsole } from '../lib/consoleBridge';
 import {
   FileCode,
+  FileText,
+  FolderOpen,
   Play,
   Send,
   CheckCircle,
@@ -20,6 +22,10 @@ import {
   CheckCircle2,
   Bot,
   BookOpen,
+  GitBranch,
+  Terminal,
+  ShieldCheck,
+  Gauge,
 } from 'lucide-react';
 import './CodeEditor.css';
 import { AICoachPanel } from './AICoachPanel';
@@ -37,6 +43,32 @@ interface Snapshot {
   html: string;
   css: string;
   js: string;
+}
+
+type EditableFileKey = 'html' | 'css' | 'js';
+type ContextFileKey = 'agents' | 'brief' | 'tests';
+type IdeFileKey = EditableFileKey | ContextFileKey;
+
+interface IdeFileMeta {
+  key: IdeFileKey;
+  label: string;
+  path: string;
+  language: string;
+  group: 'app' | 'context';
+  accent: string;
+}
+
+const IDE_FILES: IdeFileMeta[] = [
+  { key: 'html', label: 'index.html', path: 'app/index.html', language: 'html', group: 'app', accent: '#e34f26' },
+  { key: 'css', label: 'styles.css', path: 'app/styles.css', language: 'css', group: 'app', accent: '#1572b6' },
+  { key: 'js', label: 'main.js', path: 'app/main.js', language: 'javascript', group: 'app', accent: '#f7df1e' },
+  { key: 'agents', label: 'AGENTS.md', path: 'context/AGENTS.md', language: 'markdown', group: 'context', accent: '#a78bfa' },
+  { key: 'brief', label: 'PROJECT_BRIEF.md', path: 'context/PROJECT_BRIEF.md', language: 'markdown', group: 'context', accent: '#22c55e' },
+  { key: 'tests', label: 'TEST_PLAN.md', path: 'context/TEST_PLAN.md', language: 'markdown', group: 'context', accent: '#f59e0b' },
+];
+
+function isEditableFile(key: IdeFileKey): key is EditableFileKey {
+  return key === 'html' || key === 'css' || key === 'js';
 }
 
 // Removed AgentStep and AGENT_PLANS and CHEAT_SHEET_TEMPLATES as they are moved to AICoachPanel
@@ -87,12 +119,26 @@ function compilePattern(pattern: string): RegExp | null {
   }
 }
 
-function runMissionStaticChecks(files: SandboxFiles, checks: MissionCheck[]): CheckResult[] {
+function runMissionStaticChecks(
+  files: SandboxFiles,
+  checks: MissionCheck[],
+  deployPublished = false,
+): CheckResult[] {
   const baseResults = runStaticChecks(files, {});
   const doc = new DOMParser().parseFromString(files.html, 'text/html');
   const missionResults: CheckResult[] = [];
 
   for (const check of checks) {
+    if (check.id === 'check-deploy-published') {
+      missionResults.push({
+        id: check.id,
+        label: check.label,
+        passed: deployPublished,
+        detail: deployPublished ? undefined : check.failHint,
+      });
+      continue;
+    }
+
     if (check.kind === 'selector') {
       const selector = check.selector ?? '';
       const found = selector ? !!doc.querySelector(selector) : false;
@@ -148,7 +194,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const [css, setCss] = useState(defaultCodes.css);
   const [js, setJs] = useState(defaultCodes.js);
 
-  const [activeTab, setActiveTab] = useState<'html' | 'css' | 'js'>('html');
+  const [activeFile, setActiveFile] = useState<IdeFileKey>('html');
   const [loadingReview, setLoadingReview] = useState(false);
   const [reviewResult, setReviewResult] = useState<GradeResult | null>(null);
 
@@ -168,6 +214,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const [deployCount, setDeployCount] = useState<number>(
     () => listDeploymentsForStudent(studentId).length,
   );
+  const [lastDeploymentId, setLastDeploymentId] = useState<string | null>(null);
 
   const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
   const bridgeId = useMemo(
@@ -229,6 +276,60 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     getPreviewDoc(defaultCodes.html, defaultCodes.css, defaultCodes.js),
   );
 
+  const contextFiles = useMemo<Record<ContextFileKey, string>>(() => {
+    const missionTitle = mission?.title ?? `Практика недели ${weekId}`;
+    const successCriteria = (mission?.successCriteria ?? dodCriteria)
+      .map((criterion) => `- ${criterion}`)
+      .join('\n');
+    const checks = mission?.checks.length
+      ? mission.checks.map((check) => `- [ ] ${check.label}`).join('\n')
+      : '- [ ] HTML открывается без ошибок\n- [ ] JavaScript выполняется без ошибок\n- [ ] Live Preview соответствует DoD';
+
+    return {
+      agents: [
+        '# AGENTS.md',
+        '',
+        '## Роль AI-агента',
+        'Ты работаешь как аккуратный pairing-инженер внутри учебной IDE.',
+        '',
+        '## Правила',
+        '- Сначала объясняй план простыми словами.',
+        '- Делай маленький diff и не меняй лишние файлы.',
+        '- Перед правкой уточняй цель, контекст, ограничения и DoD.',
+        '- После изменения запускай Preview и проверки.',
+        '- Если застрял, предложи откат к последнему commit/snapshot.',
+      ].join('\n'),
+      brief: [
+        '# PROJECT_BRIEF.md',
+        '',
+        `## Неделя`,
+        `${weekId}: ${weekTitle}`,
+        '',
+        '## Текущая миссия',
+        missionTitle,
+        '',
+        '## Артефакт',
+        mission?.artifact ?? 'Рабочий фрагмент проекта в Live Preview.',
+        '',
+        '## Definition of Done',
+        successCriteria || '- Результат понятен, запускается и проходит проверку.',
+      ].join('\n'),
+      tests: [
+        '# TEST_PLAN.md',
+        '',
+        '## Быстрые проверки',
+        checks,
+        '',
+        '## Ручной сценарий',
+        '1. Нажать Run.',
+        '2. Проверить Live Preview.',
+        '3. Исправить ошибки из Problems.',
+        '4. Сделать Commit/Snapshot.',
+        '5. Отправить работу на AI-review.',
+      ].join('\n'),
+    };
+  }, [dodCriteria, mission, weekId, weekTitle]);
+
   // Compile on manual run button
   const handleRunCode = () => {
     setIframeError(null);
@@ -236,20 +337,30 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     setPreviewDoc(getPreviewDoc(html, css, js));
   };
 
-  const activeCode = activeTab === 'html' ? html : activeTab === 'css' ? css : js;
-  const activeLanguage = activeTab === 'html' ? 'html' : activeTab === 'css' ? 'css' : 'javascript';
+  const activeFileMeta = IDE_FILES.find((file) => file.key === activeFile) ?? IDE_FILES[0]!;
+  const activeCode = isEditableFile(activeFile)
+    ? activeFile === 'html'
+      ? html
+      : activeFile === 'css'
+        ? css
+        : js
+    : contextFiles[activeFile];
+  const activeLanguage = activeFileMeta.language;
   const latestSandboxError = sandboxConsole.errors.length
     ? sandboxConsole.errors[sandboxConsole.errors.length - 1].text
     : null;
 
   const handleEditorChange = (value: string | undefined) => {
+    if (!isEditableFile(activeFile)) return;
     const val = value || '';
     setIframeError(null);
     setMissionCheckResults([]);
-    if (activeTab === 'html') {
+    onMissionCheckResults?.([]);
+    setLastDeploymentId(null);
+    if (activeFile === 'html') {
       setHtml(val);
       setPreviewDoc(getPreviewDoc(val, css, js));
-    } else if (activeTab === 'css') {
+    } else if (activeFile === 'css') {
       setCss(val);
       setPreviewDoc(getPreviewDoc(html, val, js));
     } else {
@@ -298,6 +409,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       setJs(snap.js);
       setIframeError(null);
       setMissionCheckResults([]);
+      onMissionCheckResults?.([]);
+      setLastDeploymentId(null);
       sandboxConsole.clear();
       setPreviewDoc(getPreviewDoc(snap.html, snap.css, snap.js));
     }
@@ -311,6 +424,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       setJs(codes.js);
       setIframeError(null);
       setMissionCheckResults([]);
+      onMissionCheckResults?.([]);
+      setLastDeploymentId(null);
       sandboxConsole.clear();
       setPreviewDoc(getPreviewDoc(codes.html, codes.css, codes.js));
     }
@@ -319,7 +434,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const runCurrentChecks = async () => {
     const files = missionFiles(html, css, js);
     const staticResults = mission
-      ? runMissionStaticChecks(files, mission.checks)
+      ? runMissionStaticChecks(files, mission.checks, Boolean(lastDeploymentId))
       : runStaticChecks(files, {});
     const functionalTests = mission ? getMissionFunctionalTests(mission.checks) : [];
     let functionalResults: CheckResult[] = [];
@@ -369,6 +484,21 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       if (mission) {
         setMissionCheckResults(allResults);
         onMissionCheckResults?.(allResults);
+        const requiredIds = new Set(
+          mission.checks.filter((check) => check.required).map((check) => check.id),
+        );
+        const blockingResults = allResults.filter(
+          (result) =>
+            result.id === 'html-parses' ||
+            result.id === 'js-parses' ||
+            requiredIds.has(result.id),
+        );
+        const missionChecksPassed =
+          blockingResults.length > 0 && blockingResults.every((result) => result.passed);
+        if (!missionChecksPassed) {
+          alert('Сначала пройдите обязательные проверки миссии. ИИ-ревью откроется после зеленых checks.');
+          return;
+        }
       }
       const data = await gradeSubmission({
         kind: 'code',
@@ -409,11 +539,24 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       return;
     }
     setDeployCount((c) => c + 1);
+    setLastDeploymentId(result.deployment!.id);
     setDeployFeedback(
       `Готово. Ссылка: /preview/${result.deployment!.id}. Открываю в новой вкладке.`,
     );
     window.setTimeout(() => navigate(`/preview/${result.deployment!.id}`), 600);
   };
+
+  const passedChecks = missionCheckResults.filter((result) => result.passed).length;
+  const failedChecks = missionCheckResults.length - passedChecks;
+  const latestSnapshot = snapshots[0];
+  const editorStatus = iframeError
+    ? 'Нужен fix'
+    : missionCheckResults.length > 0 && failedChecks === 0
+      ? 'Checks OK'
+      : 'Working';
+
+  const renderFileIcon = (file: IdeFileMeta) =>
+    file.group === 'context' ? <FileText size={14} /> : <FileCode size={14} />;
 
   return (
     <div className="ide-sandbox-wrapper">
@@ -481,30 +624,105 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         </div>
       )}
 
-      {/* Editor & Preview Split Workspace */}
+      {/* Professional Web IDE workspace */}
+      <div className="ide-shell glass-panel">
+        <div className="ide-shell-topbar">
+          <div className="ide-product-mark">
+            <FolderOpen size={16} />
+            <div>
+              <strong>Centras Web IDE</strong>
+              <span>учебная AI-среда</span>
+            </div>
+          </div>
+          <div className="ide-topbar-status">
+            <span className={`ide-status-dot ${iframeError ? 'error' : 'ok'}`} />
+            <span>{editorStatus}</span>
+            <span className="ide-topbar-divider" />
+            <GitBranch size={13} />
+            <span>main</span>
+            <span className="ide-topbar-divider" />
+            <Gauge size={13} />
+            <span>{missionCheckResults.length ? `${passedChecks}/${missionCheckResults.length} checks` : 'checks ready'}</span>
+          </div>
+        </div>
+
       <div className="ide-workspace-split">
+        <aside className="ide-explorer-panel">
+          <section className="ide-explorer-section">
+            <div className="ide-panel-heading">
+              <FolderOpen size={14} />
+              <span>Explorer</span>
+            </div>
+
+            {(['app', 'context'] as const).map((group) => (
+              <div key={group} className="ide-file-group">
+                <div className="ide-file-group-title">
+                  {group === 'app' ? 'App files' : 'AI context'}
+                </div>
+                {IDE_FILES.filter((file) => file.group === group).map((file) => (
+                  <button
+                    key={file.key}
+                    onClick={() => setActiveFile(file.key)}
+                    className={`ide-file-row ${activeFile === file.key ? 'active' : ''} ${!isEditableFile(file.key) ? 'readonly' : ''}`}
+                    style={{ '--file-accent': file.accent } as React.CSSProperties}
+                  >
+                    {renderFileIcon(file)}
+                    <span>{file.label}</span>
+                    {!isEditableFile(file.key) && <small>read</small>}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </section>
+
+          <section className="ide-git-panel">
+            <div className="ide-panel-heading">
+              <GitBranch size={14} />
+              <span>Git graph</span>
+            </div>
+            <div className="git-graph-list">
+              <div className="git-graph-row working">
+                <span className="git-rail"><span className="git-dot" /></span>
+                <div>
+                  <strong>working tree</strong>
+                  <span>{latestSnapshot ? `после ${latestSnapshot.label ?? latestSnapshot.timestamp}` : 'без commit пока'}</span>
+                </div>
+              </div>
+              {snapshots.map((snap, index) => (
+                <button
+                  key={snap.id}
+                  className={`git-graph-row ${index === 0 ? 'head' : ''}`}
+                  onClick={() => handleRevertSnapshot(snap)}
+                  title="Откатиться к этому snapshot"
+                >
+                  <span className="git-rail"><span className="git-dot" /></span>
+                  <div>
+                    <strong>{snap.label ?? `commit-${snap.id}`}</strong>
+                    <span>{snap.timestamp}</span>
+                  </div>
+                </button>
+              ))}
+              {snapshots.length === 0 && (
+                <p className="git-empty-state">Сделайте первый Snapshot, чтобы увидеть историю как Git-граф.</p>
+              )}
+            </div>
+          </section>
+        </aside>
+
         {/* Monaco Editor Panel */}
-        <div className="editor-side glass-panel">
+        <div className="editor-side ide-editor-panel">
           <div className="editor-tabs-header">
             <div className="tab-buttons">
-              <button
-                onClick={() => setActiveTab('html')}
-                className={`tab-btn ${activeTab === 'html' ? 'active html' : ''}`}
-              >
-                <FileCode size={14} /> index.html
-              </button>
-              <button
-                onClick={() => setActiveTab('css')}
-                className={`tab-btn ${activeTab === 'css' ? 'active css' : ''}`}
-              >
-                <FileCode size={14} /> styles.css
-              </button>
-              <button
-                onClick={() => setActiveTab('js')}
-                className={`tab-btn ${activeTab === 'js' ? 'active js' : ''}`}
-              >
-                <FileCode size={14} /> main.js
-              </button>
+              {IDE_FILES.map((file) => (
+                <button
+                  key={file.key}
+                  onClick={() => setActiveFile(file.key)}
+                  className={`tab-btn ${activeFile === file.key ? 'active' : ''}`}
+                  style={{ '--tab-accent': file.accent } as React.CSSProperties}
+                >
+                  {renderFileIcon(file)} {file.label}
+                </button>
+              ))}
             </div>
 
             <div className="editor-controls">
@@ -573,26 +791,19 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                 minimap: { enabled: false },
                 fontSize: 13,
                 fontFamily: 'Fira Code, monospace',
-                lineNumbers: 'on',
+                lineNumbers: isEditableFile(activeFile) ? 'on' : 'off',
                 wordWrap: 'on',
                 scrollBeyondLastLine: false,
                 automaticLayout: true,
+                readOnly: !isEditableFile(activeFile),
+                renderLineHighlight: 'all',
               }}
-            />
-
-            <AICoachPanel
-              iframeError={iframeError}
-              onClearError={() => setIframeError(null)}
-              showCheatSheet={showCheatSheet}
-              onToggleCheatSheet={() => setShowCheatSheet(!showCheatSheet)}
-              agentOpen={agentOpen}
-              onToggleAgent={() => setAgentOpen(!agentOpen)}
             />
           </div>
         </div>
 
         {/* Live Preview Iframe */}
-        <div className="preview-side glass-panel">
+        <div className="preview-side ide-preview-panel">
           <div className="preview-header">
             <span className="live-badge animate-pulse">LIVE PREVIEW</span>
             <span className="preview-label">Секция вывода (Iframe)</span>
@@ -606,7 +817,41 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               className="preview-iframe"
             />
           </div>
+          <div className="ide-console-panel">
+            <div className="ide-console-tabs">
+              <span><Terminal size={13} /> Problems</span>
+              <span><ShieldCheck size={13} /> Sandbox</span>
+            </div>
+            <div className="ide-console-body">
+              {iframeError ? (
+                <p className="console-line error">{iframeError}</p>
+              ) : sandboxConsole.entries.length > 0 ? (
+                sandboxConsole.entries.slice(-3).map((entry) => (
+                  <p key={`${entry.ts}-${entry.text}`} className={`console-line ${entry.level}`}>
+                    {entry.text}
+                  </p>
+                ))
+              ) : (
+                <p className="console-line muted">Ошибок нет. Нажмите Run или Check для обновления.</p>
+              )}
+            </div>
+          </div>
         </div>
+
+        <aside className="ai-sidecar">
+          <AICoachPanel
+            iframeError={iframeError}
+            onClearError={() => setIframeError(null)}
+            showCheatSheet={showCheatSheet}
+            onToggleCheatSheet={() => setShowCheatSheet(!showCheatSheet)}
+            agentOpen={agentOpen}
+            onToggleAgent={() => setAgentOpen(!agentOpen)}
+            currentFileLabel={activeFileMeta.label}
+            missionTitle={mission?.title ?? weekTitle}
+            editorStatus={editorStatus}
+          />
+        </aside>
+      </div>
       </div>
 
       {/* Deploy + Homework Action Panel */}

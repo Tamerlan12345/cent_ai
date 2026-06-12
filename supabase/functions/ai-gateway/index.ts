@@ -1,4 +1,3 @@
-/* eslint-disable */
 // Supabase Edge Function: ai-gateway (Deno)
 // Единственная точка входа для всех LLM-вызовов платформы.
 // Ключ Gemini живёт ТОЛЬКО здесь (supabase secrets), на клиент не попадает.

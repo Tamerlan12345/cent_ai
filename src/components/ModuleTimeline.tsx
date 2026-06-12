@@ -7,12 +7,14 @@ interface ModuleTimelineProps {
   modules: CourseModule[];
   completedWeeks: number[];
   onSelectWeek: (weekId: number, tab: string) => void;
+  activeWeek?: number;
 }
 
 export const ModuleTimeline: React.FC<ModuleTimelineProps> = ({
   modules,
   completedWeeks,
   onSelectWeek,
+  activeWeek,
 }) => {
   return (
     <section id="timeline" className="timeline-section">
@@ -29,11 +31,12 @@ export const ModuleTimeline: React.FC<ModuleTimelineProps> = ({
         {modules.map((module, index) => {
           const isCompleted = completedWeeks.includes(module.id);
           const isNext = completedWeeks.length + 1 === module.id || (completedWeeks.length === 0 && module.id === 1);
+          const isLocked = activeWeek ? module.id > activeWeek : false;
 
           return (
             <div
               key={module.id}
-              className={`timeline-item ${isCompleted ? 'completed' : ''} ${isNext ? 'next' : ''}`}
+              className={`timeline-item ${isCompleted ? 'completed' : ''} ${isNext ? 'next' : ''} ${isLocked ? 'locked' : ''}`}
             >
               <div className="timeline-node">
                 {isCompleted ? (
@@ -52,6 +55,7 @@ export const ModuleTimeline: React.FC<ModuleTimelineProps> = ({
                     </span>
                     {isCompleted && <span className="status-badge status-done">Пройдено</span>}
                     {isNext && <span className="status-badge status-current">Текущий</span>}
+                    {isLocked && <span className="status-badge status-locked">Откроется позже</span>}
                   </div>
                 </div>
 
@@ -66,14 +70,16 @@ export const ModuleTimeline: React.FC<ModuleTimelineProps> = ({
                   <button
                     onClick={() => onSelectWeek(module.id, '/slides')}
                     className="btn btn-secondary"
+                    disabled={isLocked}
                   >
                     <BookOpen size={14} /> Читать слайды
                   </button>
                   <button
                     onClick={() => onSelectWeek(module.id, '/practice')}
                     className="btn btn-primary"
+                    disabled={isLocked}
                   >
-                    <Play size={14} /> Начать практику
+                    <Play size={14} /> Открыть MVP-мастер
                   </button>
                 </div>
               </div>
