@@ -26,6 +26,8 @@ import {
   Terminal,
   ShieldCheck,
   Gauge,
+  Route,
+  MousePointerClick,
 } from 'lucide-react';
 import './CodeEditor.css';
 import { AICoachPanel } from './AICoachPanel';
@@ -214,7 +216,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const [deployCount, setDeployCount] = useState<number>(
     () => listDeploymentsForStudent(studentId).length,
   );
-  const [lastDeploymentId, setLastDeploymentId] = useState<string | null>(null);
+  const [lastDeploymentId, setLastDeploymentId] = useState<string | null>(
+    () => listDeploymentsForStudent(studentId).find((deployment) => deployment.weekId === weekId)?.id ?? null,
+  );
 
   const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
   const bridgeId = useMemo(
@@ -553,7 +557,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     ? 'Нужен fix'
     : missionCheckResults.length > 0 && failedChecks === 0
       ? 'Checks OK'
-      : 'Working';
+      : 'Работаем';
+  const currentMissionStep = mission?.steps[0];
+  const missionFocusText = mission
+    ? `${mission.title}: ${mission.intro}`
+    : `Неделя ${weekId}: соберите рабочий фрагмент проекта и проверьте его по DoD.`;
+  const artifactLabel = mission?.artifact ?? 'MVP-снапшот';
 
   const renderFileIcon = (file: IdeFileMeta) =>
     file.group === 'context' ? <FileText size={14} /> : <FileCode size={14} />;
@@ -624,6 +633,35 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         </div>
       )}
 
+      <div className="ide-learning-cockpit glass-panel">
+        <div className="ide-learning-main">
+          <span className="ide-learning-eyebrow">
+            <Route size={14} /> MVP-мастер · учебный режим
+          </span>
+          <h3>{missionFocusText}</h3>
+          <p>
+            Работайте маленькими шагами: прочитайте текущую задачу, измените один файл,
+            нажмите Run, затем Check. Если всё зелёное — делайте Snapshot и отправляйте на ревью.
+          </p>
+        </div>
+        <div className="ide-learning-steps" aria-label="Порядок работы в MVP-мастере">
+          {[
+            ['1', 'Шаг', currentMissionStep?.title ?? 'Выберите файл'],
+            ['2', 'Run', 'Посмотрите Preview'],
+            ['3', 'Check', `${passedChecks}/${missionCheckResults.length || mission?.checks.length || 0}`],
+            ['4', 'Artifact', artifactLabel],
+          ].map(([number, label, value]) => (
+            <div key={label} className="ide-learning-step">
+              <span>{number}</span>
+              <div>
+                <strong>{label}</strong>
+                <small>{value}</small>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Professional Web IDE workspace */}
       <div className="ide-shell glass-panel">
         <div className="ide-shell-topbar">
@@ -651,13 +689,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           <section className="ide-explorer-section">
             <div className="ide-panel-heading">
               <FolderOpen size={14} />
-              <span>Explorer</span>
+              <span>Файлы</span>
             </div>
 
             {(['app', 'context'] as const).map((group) => (
               <div key={group} className="ide-file-group">
                 <div className="ide-file-group-title">
-                  {group === 'app' ? 'App files' : 'AI context'}
+                  {group === 'app' ? 'Код проекта' : 'Контекст для ИИ'}
                 </div>
                 {IDE_FILES.filter((file) => file.group === group).map((file) => (
                   <button
@@ -678,7 +716,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           <section className="ide-git-panel">
             <div className="ide-panel-heading">
               <GitBranch size={14} />
-              <span>Git graph</span>
+              <span>Git-граф</span>
             </div>
             <div className="git-graph-list">
               <div className="git-graph-row working">
@@ -703,7 +741,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                 </button>
               ))}
               {snapshots.length === 0 && (
-                <p className="git-empty-state">Сделайте первый Snapshot, чтобы увидеть историю как Git-граф.</p>
+                <p className="git-empty-state">Snapshot — это точка возврата. Сделайте первый, когда Preview заработает.</p>
               )}
             </div>
           </section>
@@ -713,7 +751,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         <div className="editor-side ide-editor-panel">
           <div className="editor-tabs-header">
             <div className="tab-buttons">
-              {IDE_FILES.map((file) => (
+              {IDE_FILES.filter((file) => isEditableFile(file.key)).map((file) => (
                 <button
                   key={file.key}
                   onClick={() => setActiveFile(file.key)}
@@ -789,7 +827,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               onChange={handleEditorChange}
               options={{
                 minimap: { enabled: false },
-                fontSize: 13,
+                fontSize: 15,
+                lineHeight: 23,
                 fontFamily: 'Fira Code, monospace',
                 lineNumbers: isEditableFile(activeFile) ? 'on' : 'off',
                 wordWrap: 'on',
@@ -805,8 +844,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         {/* Live Preview Iframe */}
         <div className="preview-side ide-preview-panel">
           <div className="preview-header">
-            <span className="live-badge animate-pulse">LIVE PREVIEW</span>
-            <span className="preview-label">Секция вывода (Iframe)</span>
+            <span className="live-badge">
+              <MousePointerClick size={12} /> LIVE PREVIEW
+            </span>
+            <span className="preview-label">Что увидит пользователь</span>
           </div>
           <div className="iframe-wrapper">
             <iframe

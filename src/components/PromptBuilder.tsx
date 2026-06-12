@@ -48,6 +48,11 @@ ${constraints || '[Не заполнено]'}
 ## 4. Критерии приемки (Definition of Done)
 ${dod || '[Не заполнено]'}`;
 
+  const markPromptDirty = () => {
+    setSimulationResult(null);
+    onMissionCheckResults?.([]);
+  };
+
   const handleCopy = () => {
     navigator.clipboard.writeText(combinedPrompt);
     setCopied(true);
@@ -60,6 +65,7 @@ ${dod || '[Не заполнено]'}`;
     setConstraints(practice.initialPrompt?.constraints || '');
     setDod(practice.initialPrompt?.dod || '');
     setSimulationResult(null);
+    onMissionCheckResults?.([]);
   };
 
   const handleSimulate = async () => {
@@ -161,7 +167,10 @@ ${dod || '[Не заполнено]'}`;
             <textarea
               id="prompt-goal"
               value={goal}
-              onChange={(e) => setGoal(e.target.value)}
+              onChange={(e) => {
+                setGoal(e.target.value);
+                markPromptDirty();
+              }}
               placeholder="Какую бизнес-задачу или фичу мы пишем?"
               rows={3}
             />
@@ -172,7 +181,10 @@ ${dod || '[Не заполнено]'}`;
             <textarea
               id="prompt-context"
               value={context}
-              onChange={(e) => setContext(e.target.value)}
+              onChange={(e) => {
+                setContext(e.target.value);
+                markPromptDirty();
+              }}
               placeholder="Какая структура, язык, окружение?"
               rows={3}
             />
@@ -183,7 +195,10 @@ ${dod || '[Не заполнено]'}`;
             <textarea
               id="prompt-constraints"
               value={constraints}
-              onChange={(e) => setConstraints(e.target.value)}
+              onChange={(e) => {
+                setConstraints(e.target.value);
+                markPromptDirty();
+              }}
               placeholder="Запрет на Tailwind, объем файлов, лимиты..."
               rows={3}
             />
@@ -194,7 +209,10 @@ ${dod || '[Не заполнено]'}`;
             <textarea
               id="prompt-dod"
               value={dod}
-              onChange={(e) => setDod(e.target.value)}
+              onChange={(e) => {
+                setDod(e.target.value);
+                markPromptDirty();
+              }}
               placeholder="Как понять, что задача завершена полностью?"
               rows={3}
             />

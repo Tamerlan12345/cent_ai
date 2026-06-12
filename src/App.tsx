@@ -170,7 +170,7 @@ function App() {
 
   const handleCompleteWeek = async (weekId: number) => {
     if (completedWeeks.includes(weekId)) return;
-    setCompletedWeeks((prev) => [...prev, weekId]);
+    setCompletedWeeks((prev) => (prev.includes(weekId) ? prev : [...prev, weekId]));
     await saveWeekCompleted(userProfile?.id ?? null, weekId);
   };
 

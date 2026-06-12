@@ -212,6 +212,12 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
               </button>
             </div>
 
+            {!currentStepPassed && (
+              <p className="mission-step-helper">
+                Чтобы перейти дальше: выполните действие в IDE, нажмите Run, затем «Проверить миссию» и исправьте красные checks.
+              </p>
+            )}
+
             {currentStepPassed && <p className="mission-step-done">{activeStep.doneText}</p>}
           </div>
 
