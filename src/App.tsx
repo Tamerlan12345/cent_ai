@@ -14,6 +14,7 @@ import { TeacherDashboard } from './components/TeacherDashboard';
 import { TourPage } from './components/tour/TourPage';
 import { DeployPreview } from './components/DeployPreview';
 import { PracticeMissionRunner } from './components/PracticeMissionRunner';
+import { Term } from './components/Term';
 import { supabase } from './supabaseClient';
 import { loadCourseModules } from './lib/contentService';
 import { loadProgress, saveWeekCompleted, saveChecklistItem } from './lib/progressService';
@@ -248,21 +249,6 @@ function App() {
           {/* ── Внутренний деплой курса (вместо внешнего хостинга) ── */}
           <Route path="/preview/:id" element={<DeployPreview />} />
 
-          {/* ── Program overview ── */}
-          <Route
-            path="/program"
-            element={
-              <main className="main-content">
-                <ModuleTimeline
-                  modules={courseModules}
-                  completedWeeks={completedWeeks}
-                  onSelectWeek={handleSelectWeek}
-                  activeWeek={userProfile?.role === 'student' ? activeWeek : undefined}
-                />
-              </main>
-            }
-          />
-
           {/* ── Slide deck ── */}
           <Route
             path="/slides"
@@ -296,33 +282,13 @@ function App() {
                   <div className="practice-header-section">
                     <div className="practice-title-block">
                       <span className="practice-page-eyebrow">
-                        4 недели · 4 занятия · один MVP
+                        4 недели · 4 занятия · один <Term id="mvp">MVP</Term>
                       </span>
                       <h2 className="practice-page-title">MVP-мастер</h2>
                       <p className="practice-page-subtitle">
                         Практика встроена в маршрут: на занятии делаем короткие миссии,
                         на неделю остается только понятный артефакт проекта.
                       </p>
-                    </div>
-                    <div className="practice-week-nav">
-                      {courseModules.map((m) => {
-                        const locked = userProfile.role === 'student' && m.id > activeWeek;
-                        return (
-                          <button
-                            key={m.id}
-                            type="button"
-                            disabled={locked}
-                            onClick={() => {
-                              setSelectedWeekId(m.id);
-                              navigate(`/practice?week=${m.id}`, { replace: true });
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            className={`practice-week-btn ${m.id === selectedWeekId ? 'active' : ''} ${locked ? 'locked' : ''}`}
-                          >
-                            {locked && <Lock size={10} className="inline-icon" />} Неделя {m.id}
-                          </button>
-                        );
-                      })}
                     </div>
                   </div>
 
@@ -460,7 +426,7 @@ function App() {
                           <div className="checklist-card glass-panel">
                             <div className="card-header-iconified">
                               <CheckSquare className="card-header-icon" />
-                              <h3>Чек-лист готовности к ревью (DoD)</h3>
+                              <h3>Чек-лист готовности к ревью (<Term id="dod">DoD</Term>)</h3>
                             </div>
                             <div className="checklist-items-container">
                               {activeModule.practice.checklist.map((item, idx) => {

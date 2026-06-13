@@ -4,6 +4,7 @@ import { gradeSubmission } from '../lib/aiGateway';
 import type { GradeResult } from '../lib/aiGateway';
 import type { CheckResult } from '../lib/grading';
 import type { PracticeTask, PracticeMission } from '../types';
+import { PASSING_SCORE } from '../lib/constants';
 import './PromptBuilder.css';
 
 interface PromptBuilderProps {
@@ -33,6 +34,8 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
   const [copied, setCopied] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [simulationResult, setSimulationResult] = useState<GradeResult | null>(null);
+  // Inline-сообщение об ошибке вместо всплывающего alert(): ученику спокойнее видеть текст рядом с кнопкой.
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const combinedPrompt = `# ИНСТРУКЦИЯ ДЛЯ AI-АГЕНТА
 
@@ -69,8 +72,10 @@ ${dod || '[Не заполнено]'}`;
   };
 
   const handleSimulate = async () => {
+    // Новая попытка — убираем прежнее сообщение об ошибке.
+    setErrorMsg(null);
     if (!goal || !context || !constraints || !dod) {
-      alert("Пожалуйста, заполните все разделы конструктора, чтобы AI-агент получил полноценный контекст!");
+      setErrorMsg('Пожалуйста, заполните все разделы конструктора, чтобы AI-агент получил полноценный контекст.');
       return;
     }
 
@@ -121,7 +126,7 @@ ${dod || '[Не заполнено]'}`;
       if (allPassed) {
         onMissionPassed?.();
       } else {
-        alert('Не все локальные проверки пройдены! Проверьте подсказки слева и обновите промпт.');
+        setErrorMsg('Не все локальные проверки пройдены. Проверьте подсказки слева и обновите промпт.');
         return;
       }
     }
@@ -141,10 +146,10 @@ ${dod || '[Не заполнено]'}`;
       });
 
       setSimulationResult(data);
-      if (data.score >= 80) onHomeworkApproved();
+      if (data.score >= PASSING_SCORE) onHomeworkApproved();
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'AI-шлюз недоступен';
-      alert(`Ошибка проверки промпта: ${errMsg}`);
+      setErrorMsg(`Ошибка проверки промпта: ${errMsg}`);
     } finally {
       setSimulating(false);
     }
@@ -231,6 +236,13 @@ ${dod || '[Не заполнено]'}`;
               </>
             )}
           </button>
+
+          {errorMsg && (
+            <div className="prompt-inline-error" role="alert">
+              <AlertCircle size={16} />
+              <span>{errorMsg}</span>
+            </div>
+          )}
         </div>
 
         {/* Live Output Codeblock */}
@@ -268,14 +280,14 @@ ${dod || '[Не заполнено]'}`;
       )}
 
       {simulationResult && (
-        <div className={`simulation-results-box glass-panel animate-fade-in ${simulationResult.score >= 80 ? 'approved' : 'rejected'}`}>
+        <div className={`simulation-results-box glass-panel animate-fade-in ${simulationResult.score >= PASSING_SCORE ? 'approved' : 'rejected'}`}>
           <div className="results-header">
             <div className="grade-badge">
               <span>{simulationResult.score} / 100</span>
               <span className="grade-label">Оценка ИИ</span>
             </div>
             <div className="report-status-text">
-              {simulationResult.score >= 80 ? (
+              {simulationResult.score >= PASSING_SCORE ? (
                 <div className="status-indicator success">
                   <CheckCircle size={18} />
                   <span>Промпт зачтен!</span>

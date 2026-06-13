@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { useNavigate } from 'react-router-dom';
-import { gradeSubmission } from '../lib/aiGateway';
+import { gradeSubmission, generateDiff } from '../lib/aiGateway';
 import type { GradeResult } from '../lib/aiGateway';
 import { runStaticChecks } from '../lib/grading';
 import type { CheckResult, FunctionalTest, SandboxFiles } from '../lib/grading';
+import { PASSING_SCORE } from '../lib/constants';
 import { buildSandboxDoc, runFunctionalTests, useSandboxConsole } from '../lib/consoleBridge';
 import {
   FileCode,
@@ -28,14 +29,17 @@ import {
   Gauge,
   Route,
   MousePointerClick,
+  Settings,
 } from 'lucide-react';
 import './CodeEditor.css';
 import { AICoachPanel } from './AICoachPanel';
+import { DiffAuditor } from './tour/DiffAuditor';
 import {
   createDeployment,
   getQuotaForStudent,
   listDeploymentsForStudent,
 } from '../lib/sandboxStore';
+import { useUiStore } from '../lib/uiStore';
 import type { MissionCheck, PracticeMission, SandboxStarter, UserProfile } from '../types';
 
 interface Snapshot {
@@ -207,6 +211,21 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const [checkingMission, setCheckingMission] = useState(false);
 
   const [agentOpen, setAgentOpen] = useState(false);
+
+  // Режим эксперта управляет показом продвинутой обвязки IDE (git, квоты, агент-план).
+  const expertMode = useUiStore((state) => state.expertMode);
+  const toggleExpertMode = useUiStore((state) => state.toggleExpertMode);
+
+  // Опция «агент пишет код»: агент предлагает дифф, ученик жмёт Принять/Отклонить.
+  const [agentProposal, setAgentProposal] = useState<{
+    original: string;
+    modified: string;
+    explanation: string;
+    fromLiveAi: boolean;
+  } | null>(null);
+  const [agentThinking, setAgentThinking] = useState(false);
+  const [agentNote, setAgentNote] = useState<string | null>(null);
+  const jsStep = mission?.steps.find((step) => step.target === 'js');
 
   // Internal deployment
   const [deployFeedback, setDeployFeedback] = useState<string | null>(null);
@@ -515,7 +534,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       });
 
       setReviewResult(data);
-      if (data.score >= 80) onHomeworkApproved();
+      if (data.score >= PASSING_SCORE) onHomeworkApproved();
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'AI-шлюз недоступен';
       alert(`Ошибка проверки ИИ: ${errMsg}`);
@@ -550,6 +569,53 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     window.setTimeout(() => navigate(`/preview/${result.deployment!.id}`), 600);
   };
 
+  // «Пусть агент напишет»: пробуем живой ai-gateway, иначе заготовка шага (демо-режим).
+  const handleAgentWrite = async () => {
+    if (!mission || !jsStep) return;
+    setAgentNote(null);
+    setAgentThinking(true);
+    try {
+      const requiredIds = mission.checks
+        .filter((check) => check.kind === 'selector' && check.selector)
+        .map((check) => check.selector!);
+      const live = await generateDiff({
+        files: missionFiles(html, css, js),
+        instruction: jsStep.instruction,
+        requiredIds,
+      });
+      if (live?.js) {
+        setAgentProposal({ original: js, modified: live.js, explanation: live.explanation, fromLiveAi: true });
+      } else if (jsStep.agentPatch?.js) {
+        setAgentProposal({
+          original: js,
+          modified: jsStep.agentPatch.js,
+          explanation: jsStep.agentPatch.explanation,
+          fromLiveAi: false,
+        });
+      } else {
+        setAgentNote(
+          'В демо-режиме у этого шага пока нет заготовки агента. Подключите ai-gateway для живой генерации — или напишите код сами.',
+        );
+      }
+      if (activeFile !== 'js') setActiveFile('js');
+    } finally {
+      setAgentThinking(false);
+    }
+  };
+
+  // Ученик принял дифф агента — применяем код к app.js и делаем снапшот для отката.
+  const handleAgentApprove = () => {
+    if (!agentProposal) return;
+    setJs(agentProposal.modified);
+    setIframeError(null);
+    setMissionCheckResults([]);
+    onMissionCheckResults?.([]);
+    sandboxConsole.clear();
+    setPreviewDoc(getPreviewDoc(html, css, agentProposal.modified));
+    handleCreateSnapshot('после агента');
+    setAgentProposal(null);
+  };
+
   const passedChecks = missionCheckResults.filter((result) => result.passed).length;
   const failedChecks = missionCheckResults.length - passedChecks;
   const latestSnapshot = snapshots[0];
@@ -569,30 +635,33 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
   return (
     <div className="ide-sandbox-wrapper">
-      {/* System Limits Banner — без Docker, ресурсы раздаём административно */}
-      <div className="sandbox-limits-banner">
-        <div className="limits-title">
-          <Cpu size={14} />
-          <span>Системные ограничения песочницы курса</span>
+      {/* System Limits Banner — без Docker, ресурсы раздаём административно.
+          Скрыт от новичков, виден только в режиме эксперта. */}
+      {expertMode && (
+        <div className="sandbox-limits-banner">
+          <div className="limits-title">
+            <Cpu size={14} />
+            <span>Системные ограничения песочницы курса</span>
+          </div>
+          <div className="limits-pills">
+            <div className="limit-pill" title="Оперативная память для превью">
+              <HardDrive size={12} />
+              RAM {quota.ramMb} МБ
+            </div>
+            <div className="limit-pill" title="Доля CPU, выделенная этой сессии">
+              <Cpu size={12} />
+              CPU {quota.cpuPercent}%
+            </div>
+            <div className="limit-pill" title="Сколько /preview/:id можно держать одновременно">
+              <Rocket size={12} />
+              Деплои {deployCount}/{quota.maxDeploys}
+            </div>
+            <div className="limit-pill" title="Максимум активного времени превью">
+              ⏱ {Math.round(quota.maxRunSeconds / 60)} мин
+            </div>
+          </div>
         </div>
-        <div className="limits-pills">
-          <div className="limit-pill" title="Оперативная память для превью">
-            <HardDrive size={12} />
-            RAM {quota.ramMb} МБ
-          </div>
-          <div className="limit-pill" title="Доля CPU, выделенная этой сессии">
-            <Cpu size={12} />
-            CPU {quota.cpuPercent}%
-          </div>
-          <div className="limit-pill" title="Сколько /preview/:id можно держать одновременно">
-            <Rocket size={12} />
-            Деплои {deployCount}/{quota.maxDeploys}
-          </div>
-          <div className="limit-pill" title="Максимум активного времени превью">
-            ⏱ {Math.round(quota.maxRunSeconds / 60)} мин
-          </div>
-        </div>
-      </div>
+      )}
 
       {mission && (
         <div className="mission-check-panel glass-panel">
@@ -633,6 +702,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         </div>
       )}
 
+      {expertMode && (
       <div className="ide-learning-cockpit glass-panel">
         <div className="ide-learning-main">
           <span className="ide-learning-eyebrow">
@@ -661,6 +731,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           ))}
         </div>
       </div>
+      )}
 
       {/* Professional Web IDE workspace */}
       <div className="ide-shell glass-panel">
@@ -675,12 +746,26 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           <div className="ide-topbar-status">
             <span className={`ide-status-dot ${iframeError ? 'error' : 'ok'}`} />
             <span>{editorStatus}</span>
-            <span className="ide-topbar-divider" />
-            <GitBranch size={13} />
-            <span>main</span>
+            {expertMode && (
+              <>
+                <span className="ide-topbar-divider" />
+                <GitBranch size={13} />
+                <span>main</span>
+              </>
+            )}
             <span className="ide-topbar-divider" />
             <Gauge size={13} />
             <span>{missionCheckResults.length ? `${passedChecks}/${missionCheckResults.length} checks` : 'checks ready'}</span>
+            <span className="ide-topbar-divider" />
+            <button
+              type="button"
+              onClick={toggleExpertMode}
+              className={`ide-expert-toggle ${expertMode ? 'active' : ''}`}
+              title="Режим эксперта: показать продвинутые панели (git, квоты, агент-план)"
+              aria-pressed={expertMode}
+            >
+              <Settings size={13} /> {expertMode ? 'Эксперт: вкл' : 'Эксперт'}
+            </button>
           </div>
         </div>
 
@@ -713,6 +798,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             ))}
           </section>
 
+          {expertMode && (
           <section className="ide-git-panel">
             <div className="ide-panel-heading">
               <GitBranch size={14} />
@@ -745,6 +831,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               )}
             </div>
           </section>
+          )}
         </aside>
 
         {/* Monaco Editor Panel */}
@@ -764,6 +851,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             </div>
 
             <div className="editor-controls">
+              {mission && jsStep && (
+                <button
+                  onClick={handleAgentWrite}
+                  disabled={agentThinking}
+                  className="btn btn-primary btn-sm"
+                  title="Агент напишет код для текущего шага — вы проверите дифф и решите: принять или отклонить"
+                >
+                  <Bot size={12} /> {agentThinking ? 'Агент пишет…' : 'Пусть агент напишет'}
+                </button>
+              )}
+              {expertMode && (
               <button
                 onClick={() => setAgentOpen(!agentOpen)}
                 className={`btn btn-sm ${agentOpen ? 'btn-primary' : 'btn-secondary'}`}
@@ -771,6 +869,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               >
                 <Bot size={12} /> Agent
               </button>
+              )}
               <div
                 className="snapshot-controls"
                 style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', marginRight: '0.5rem' }}
@@ -895,6 +994,23 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       </div>
       </div>
 
+      {agentNote && (
+        <div className="deploy-feedback animate-fade-in" role="status">
+          {agentNote}
+        </div>
+      )}
+
+      {agentProposal && (
+        <DiffAuditor
+          original={agentProposal.original}
+          modified={agentProposal.modified}
+          explanation={agentProposal.explanation}
+          fromLiveAi={agentProposal.fromLiveAi}
+          onApprove={handleAgentApprove}
+          onReject={() => setAgentProposal(null)}
+        />
+      )}
+
       {/* Deploy + Homework Action Panel */}
       <div className="homework-action-bar glass-panel glow-border-cyan">
         <div className="action-text">
@@ -938,14 +1054,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
       {/* Gemini AI Grading Response */}
       {reviewResult && (
-        <div className={`ai-review-report glass-panel animate-fade-in ${reviewResult.score >= 80 ? 'approved' : 'rejected'}`}>
+        <div className={`ai-review-report glass-panel animate-fade-in ${reviewResult.score >= PASSING_SCORE ? 'approved' : 'rejected'}`}>
           <div className="report-header">
             <div className="grade-badge">
               <span>{reviewResult.score} / 100</span>
               <span className="grade-label">Оценка ИИ</span>
             </div>
             <div className="report-status-text">
-              {reviewResult.score >= 80 ? (
+              {reviewResult.score >= PASSING_SCORE ? (
                 <div className="status-indicator success">
                   <CheckCircle size={18} />
                   <span>Домашняя работа зачтена!</span>

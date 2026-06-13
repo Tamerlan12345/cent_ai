@@ -1,0 +1,12 @@
+/* Термин из глоссария: пунктирное подчёркивание + подсказка по наведению/фокусу */
+.glossary-term {
+  border-bottom: 1px dotted var(--text-muted, #94a3b8);
+  cursor: help;
+  transition: color 0.15s;
+}
+
+.glossary-term:hover,
+.glossary-term:focus {
+  color: var(--accent-cyan, #00f2fe);
+  outline: none;
+}

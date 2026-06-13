@@ -31,7 +31,7 @@ export const Hero: React.FC<HeroProps> = ({ onStartTraining }) => {
           </h1>
 
           <p className="hero-description hero-stagger-3">
-            Освой <strong>вайбкодинг</strong> на профессиональном уровне. Переходи от беспорядочного копирования кода к осознанному проектированию, контролю качества (DoD), MCP-протоколам и автоматизации пайплайнов.
+            Освой <strong>вайбкодинг</strong> по шагам: от беспорядочного копирования кода — к осознанному управлению ИИ-агентами, с понятными целями, проверкой качества и безопасностью.
           </p>
 
           <div className="hero-cta-buttons hero-stagger-4">
@@ -60,7 +60,7 @@ export const Hero: React.FC<HeroProps> = ({ onStartTraining }) => {
               </div>
               <div className="feature-text">
                 <h4>Контроль качества</h4>
-                <p>Методология целей G1-G4</p>
+                <p>Понятные критерии готовности</p>
               </div>
             </div>
           </div>

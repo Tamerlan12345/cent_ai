@@ -1666,7 +1666,11 @@ try {
               instruction: 'Добавьте обработчик клика, который увеличивает число внутри #score на 1.',
               checkIds: ['func-click'],
               hints: ['Используйте document.getElementById', 'Используйте addEventListener', 'Обновляйте textContent'],
-              doneText: 'Логика работает!'
+              doneText: 'Логика работает!',
+              agentPatch: {
+                js: "const btn = document.getElementById('coin-btn');\nconst score = document.getElementById('score');\nlet count = parseInt(score.textContent) || 0;\nbtn.addEventListener('click', () => {\n  count += 1;\n  score.textContent = count;\n});",
+                explanation: 'Агент находит кнопку и счётчик по id, хранит число в переменной count и по клику увеличивает его, обновляя текст в #score. Прочитайте дифф: меняется только app.js, разметка не тронута.',
+              },
             }
           ],
           checks: [
@@ -1703,7 +1707,11 @@ try {
               instruction: 'Напишите JS логику, которая добавляет привычки в список.',
               checkIds: ['func-add-habit'],
               hints: ['Слушайте событие submit', 'Используйте preventDefault', 'Добавляйте HTML в habits-list'],
-              doneText: 'Рендер работает.'
+              doneText: 'Рендер работает.',
+              agentPatch: {
+                js: "const form = document.getElementById('habit-form');\nconst list = document.getElementById('habits-list');\nif (form && list) {\n  form.addEventListener('submit', (e) => {\n    e.preventDefault();\n    const input = form.querySelector('input');\n    const name = ((input && input.value) || '').trim();\n    if (!name) return;\n    const item = document.createElement('div');\n    item.textContent = name;\n    list.appendChild(item);\n    if (input) input.value = '';\n  });\n}",
+                explanation: 'Агент находит форму и список по id, слушает submit, отменяет перезагрузку (preventDefault), берёт текст из поля и добавляет новый элемент в #habits-list. Разметку из шага 1 не трогает.',
+              },
             }
           ],
           checks: [

@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import './CodeEditor.css';
+import { useUiStore } from '../lib/uiStore';
 
 type CoachModeId = 'mentor' | 'architect' | 'builder' | 'reviewer' | 'security' | 'qa';
 type ModelPresetId = 'fast' | 'balanced' | 'deep' | 'critic';
@@ -286,6 +287,10 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
     if (planTimerRef.current) window.clearTimeout(planTimerRef.current);
   };
 
+  // Режим эксперта прячет «Agent Manager» (симулятор) от новичков — в фазе 2
+  // его заменит настоящий агент с дифф-ревью.
+  const expertMode = useUiStore((state) => state.expertMode);
+
   return (
     <div className="ai-coach-panel ai-coach-dock">
       <div className="ai-dock-header">
@@ -423,7 +428,7 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
         </div>
       )}
 
-      {agentOpen && (
+      {expertMode && agentOpen && (
         <div className="agent-manager-panel inline animate-slide-in">
           <div className="agent-manager-header">
             <div className="agent-manager-title">

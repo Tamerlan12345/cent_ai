@@ -54,6 +54,8 @@ export const TeacherDashboard: React.FC = () => {
   const [quotaStudentId, setQuotaStudentId] = useState<string>('');
   const [quotaDraft, setQuotaDraft] = useState<ResourceQuota | null>(null);
   const [studentDeployments, setStudentDeployments] = useState<DeployedSnapshot[]>([]);
+  // Inline-уведомление о сохранении квоты вместо всплывающего alert.
+  const [quotaSavedMsg, setQuotaSavedMsg] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -119,6 +121,7 @@ export const TeacherDashboard: React.FC = () => {
 
   const handleSelectQuotaStudent = (id: string) => {
     setQuotaStudentId(id);
+    setQuotaSavedMsg(null); // сбрасываем уведомление при смене ученика
     if (!id) {
       setQuotaDraft(null);
       setStudentDeployments([]);
@@ -136,7 +139,7 @@ export const TeacherDashboard: React.FC = () => {
   const handleSaveQuota = () => {
     if (!quotaDraft) return;
     upsertQuota(quotaDraft);
-    alert(`Квота для «${quotaDraft.studentName}» обновлена.`);
+    setQuotaSavedMsg(`Квота для «${quotaDraft.studentName}» обновлена.`);
   };
 
   const handleResetQuotaToDefault = () => {
@@ -285,6 +288,15 @@ export const TeacherDashboard: React.FC = () => {
                     Сбросить к дефолту
                   </button>
                 </div>
+
+                {quotaSavedMsg && (
+                  <div
+                    role="status"
+                    style={{ marginTop: '0.75rem', padding: '0.6rem 0.85rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', color: '#10B981', fontSize: '0.85rem' }}
+                  >
+                    {quotaSavedMsg}
+                  </div>
+                )}
 
                 {quotaBlockedStudents.find(s => s.id === quotaStudentId) && (
                   <div className="alert-quota-block" style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '8px', color: '#ef4444' }}>

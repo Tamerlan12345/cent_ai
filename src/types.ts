@@ -93,6 +93,17 @@ export interface MissionStep {
   checkIds: string[];
   hints: [string, string, string];
   doneText: string;
+  /**
+   * Необязательная заготовка кода «от агента» для опции «пусть агент напишет».
+   * Используется как fallback в демо-режиме, когда живой ai-gateway недоступен.
+   * Поле опциональное — существующий контент остаётся валидным.
+   */
+  agentPatch?: {
+    html?: string;
+    css?: string;
+    js?: string;
+    explanation: string;
+  };
 }
 
 export interface MissionCheck {

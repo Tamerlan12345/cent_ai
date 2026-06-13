@@ -44,7 +44,8 @@ export const DeployPreview: React.FC = () => {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>${escape(deployment.projectName)}</title>
+          <!-- Экранируем только заголовок: тело (html/css/js) исполняется внутри iframe c sandbox="allow-scripts", поэтому отдельная санитизация контента здесь не нужна -->
+          <title>${escapeHtml(deployment.projectName)}</title>
           <style>
             html, body { margin: 0; padding: 0; background: #0A0E17; color: #E2E8F0; font-family: system-ui, sans-serif; }
             ${deployment.css}
@@ -150,7 +151,8 @@ export const DeployPreview: React.FC = () => {
   );
 };
 
-// безопасный escape для <title>
-function escape(s: string): string {
+// Экранирование HTML только для <title>: имя проекта подставляется в шаблон,
+// а тело превью исполняется в sandbox-iframe, поэтому больше ничего санитизировать не требуется.
+function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 }

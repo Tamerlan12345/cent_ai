@@ -135,15 +135,6 @@ export const ResourceLibrary: React.FC = () => {
                       {link.level === 'required' ? 'Обязательный' : link.level === 'recommended' ? 'Рекомендуемый' : 'Продвинутый'}
                     </span>
                   )}
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="external-link-icon"
-                    title="Открыть в новой вкладке"
-                  >
-                    <ExternalLink size={16} />
-                  </a>
                 </div>
               </div>
 
@@ -156,7 +147,7 @@ export const ResourceLibrary: React.FC = () => {
                 rel="noopener noreferrer"
                 className="resource-card-action btn btn-secondary"
               >
-                Изучить ресурс
+                <ExternalLink size={16} /> Изучить ресурс
               </a>
             </div>
           ))}

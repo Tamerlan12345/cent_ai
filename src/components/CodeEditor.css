@@ -883,6 +883,33 @@
   background: var(--border-color);
 }
 
+/* Тумблер «Режим эксперта»: прячет/показывает продвинутую обвязку IDE */
+.ide-expert-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.ide-expert-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.ide-expert-toggle.active {
+  color: #000;
+  background: var(--accent-cyan, #00f2fe);
+  border-color: var(--accent-cyan, #00f2fe);
+}
+
 .ide-workspace-split {
   display: grid;
   grid-template-columns: minmax(190px, 220px) minmax(360px, 1.15fr) minmax(320px, 0.95fr) minmax(300px, 340px);

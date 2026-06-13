@@ -90,7 +90,7 @@ export const PracticeTimer: React.FC<PracticeTimerProps> = ({ durationMinutes })
         <h4 className="timer-title">Таймер Спринта Практики</h4>
         <div className="timer-badge">
           <ClockIcon className="timer-badge-icon" />
-          <span>20 минут</span>
+          <span>{durationMinutes} минут</span>
         </div>
       </div>
 

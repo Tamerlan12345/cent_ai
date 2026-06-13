@@ -3,6 +3,16 @@ import { CheckCircle2, Play, BookOpen, Clock } from 'lucide-react';
 import type { CourseModule } from '../types';
 import './ModuleTimeline.css';
 
+// Обрезка текста по словам: режем по последнему пробелу до лимита,
+// чтобы не разрывать слово посередине. Многоточие добавляем только если текст реально обрезан.
+function truncateWords(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  const slice = text.substring(0, maxLength);
+  const lastSpace = slice.lastIndexOf(' ');
+  const cut = lastSpace > 0 ? slice.substring(0, lastSpace) : slice;
+  return `${cut}…`;
+}
+
 interface ModuleTimelineProps {
   modules: CourseModule[];
   completedWeeks: number[];
@@ -63,7 +73,7 @@ export const ModuleTimeline: React.FC<ModuleTimelineProps> = ({
                 <p className="module-desc">{module.shortDescription}</p>
 
                 <div className="module-concept">
-                  <strong>Концепция:</strong> {module.concept.substring(0, 120)}...
+                  <strong>Концепция:</strong> {truncateWords(module.concept, 120)}
                 </div>
 
                 <div className="card-actions">

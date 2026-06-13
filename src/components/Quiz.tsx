@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { HelpCircle, Check, X, ArrowRight, Award } from 'lucide-react';
 import type { QuizQuestion } from '../types';
+import { PASSING_SCORE } from '../lib/constants';
 import './Quiz.css';
-
-const PASSING_SCORE = 80;
 
 interface QuizProps {
   questions: QuizQuestion[];
