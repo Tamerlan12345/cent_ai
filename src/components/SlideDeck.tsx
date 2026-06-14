@@ -176,16 +176,21 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
 
         {/* Slide Header */}
         <div className="slide-header">
-          <div className="slide-meta">
-            <span className="slide-module-title">{activeModule.title}</span>
-            <span className="slide-counter">
-              {currentSlideIndex + 1} / {activeModule.slides.length}
-            </span>
+          <div className="slide-stage-mark" aria-hidden="true">
+            {String(currentSlideIndex + 1).padStart(2, '0')}
           </div>
-          <h2 className="slide-title">
-            {activeSlide.emoji && <span className="slide-title-emoji">{activeSlide.emoji}</span>}
-            {activeSlide.title}
-          </h2>
+          <div className="slide-header-copy">
+            <div className="slide-meta">
+              <span className="slide-module-title">{activeModule.title}</span>
+              <span className="slide-counter">
+                {currentSlideIndex + 1} / {activeModule.slides.length}
+              </span>
+            </div>
+            <h2 className="slide-title">
+              {activeSlide.emoji && <span className="slide-title-emoji">{activeSlide.emoji}</span>}
+              {activeSlide.title}
+            </h2>
+          </div>
         </div>
 
         <div className="slide-action-strip">

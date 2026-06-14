@@ -17,6 +17,42 @@ interface PromptBuilderProps {
   onMissionPassed?: () => void;
 }
 
+const includesAny = (text: string, terms: string[]) => terms.some((term) => text.includes(term));
+
+const getBriefCheck = (text: string) => {
+  const missing: string[] = [];
+  if (!includesAny(text, ['persona', 'персона', 'роль', 'наставник', 'ментор'])) missing.push('Persona');
+  if (!includesAny(text, ['task', 'задач', 'canvas', 'канвас', 'вопрос', 'провер'])) missing.push('Task');
+  if (!includesAny(text, ['context', 'контекст', 'antigravity', 'html/css/js', 'localstorage', '4 недели'])) missing.push('Context');
+  if (!includesAny(text, ['format', 'формат', '3 шага', 'три шага', 'коротк', 'один вопрос'])) missing.push('Format');
+  if (!includesAny(text, ['не пиши финальный код', 'не писать финальный код', 'без финального кода', 'объяснен'])) {
+    missing.push('запрет писать финальный код без объяснения');
+  }
+
+  return {
+    passed: missing.length === 0,
+    evidence: missing.length ? `Добавьте: ${missing.join(', ')}.` : 'Инструкция содержит Persona / Task / Context / Format и защитное правило.',
+  };
+};
+
+const getMediaCheck = (text: string) => {
+  const missing: string[] = [];
+  if (!includesAny(text, ['стиль', 'style', '3d', 'flat', 'иллюстрац', 'реалист', 'неон', 'студийн', 'дневн'])) {
+    missing.push('визуальный стиль');
+  }
+  if (!includesAny(text, ['объект', 'экран', 'интерфейс', 'карточ', 'форма', 'человек', 'персонаж', 'панель'])) {
+    missing.push('ключевые объекты');
+  }
+  if (!includesAny(text, ['без текста', 'не добавлять текст', 'no text', 'без надпис'])) {
+    missing.push('запрет текста на изображении');
+  }
+
+  return {
+    passed: missing.length === 0,
+    evidence: missing.length ? `Уточните: ${missing.join(', ')}.` : 'Промпт описывает стиль, объекты и запрет текста.',
+  };
+};
+
 export const PromptBuilder: React.FC<PromptBuilderProps> = ({
   practice,
   mission,
@@ -92,12 +128,24 @@ ${dod || '[Не заполнено]'}`;
         else if (check.id === 'check-context' && context.length > 5) passed = true;
         else if (check.id === 'check-constraints' && constraints.length > 5) passed = true;
         else if (check.id === 'check-dod' && dod.length > 5) passed = true;
-        else if (check.id === 'check-brief' && combinedPrompt.length > 20) passed = true;
-        else if (check.id === 'check-media' && combinedPrompt.length > 20) passed = true;
+        else if (check.id === 'check-brief') {
+          const result = getBriefCheck(text);
+          passed = result.passed;
+          evidence = result.evidence;
+        }
+        else if (check.id === 'check-media') {
+          const result = getMediaCheck(text);
+          passed = result.passed;
+          evidence = result.evidence;
+        }
         else if (check.id === 'check-brief-role' && (text.includes('менеджер') || text.includes('роль') || text.includes('продакт'))) passed = true;
         else if (check.id === 'check-brief-scenario') {
           passed = text.includes('сценарий') || text.includes('шаги');
           evidence = passed ? 'Сценарий описан' : 'Опишите главный сценарий использования';
+        }
+        else if (check.id === 'check-no-how-hook') {
+          passed = includesAny(text, ['ноу-хау', 'фишк', 'hook', 'риск-скоринг', 'приоритет', 'коуч', 'сравнен', 'подсказ']);
+          evidence = passed ? 'Ноу-хау фишка описана' : 'Добавьте одну ноу-хау фишку без внешнего API';
         }
         else if (check.id === 'check-screen-map') {
           passed = text.includes('экран') || text.includes('кнопк');

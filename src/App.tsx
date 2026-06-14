@@ -14,6 +14,7 @@ import { TeacherDashboard } from './components/TeacherDashboard';
 import { TourPage } from './components/tour/TourPage';
 import { DeployPreview } from './components/DeployPreview';
 import { PracticeMissionRunner } from './components/PracticeMissionRunner';
+import { MvpCaseLab } from './components/MvpCaseLab';
 import { Term } from './components/Term';
 import { supabase } from './supabaseClient';
 import { loadCourseModules } from './lib/contentService';
@@ -318,6 +319,8 @@ function App() {
                       );
                     })}
                   </div>
+
+                  {!isWeekLocked && <MvpCaseLab />}
 
                   {isWeekLocked ? (
                     lockedScreen
