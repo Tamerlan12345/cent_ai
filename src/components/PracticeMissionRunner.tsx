@@ -45,6 +45,7 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
     activeStep.checkIds.length > 0 && activeStep.checkIds.every((id) => passedIds.has(id));
   const missionPassed =
     requiredCheckIds.length > 0 && requiredCheckIds.every((id) => passedIds.has(id));
+  const usesPromptBuilder = mission.steps[0]?.target === 'prompt';
   const effectiveCompletedMissionIds = new Set(completedMissionIds);
   if (missionPassed) effectiveCompletedMissionIds.add(mission.id);
   const activeMissionDone = effectiveCompletedMissionIds.has(mission.id);
@@ -116,7 +117,7 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
     <div className="mission-runner-wrapper">
       <div className="mission-runner-header glass-panel">
         <div>
-          <span className="mission-eyebrow">Практика внутри недели</span>
+          <span className="mission-eyebrow">Задание недели</span>
           <h3>{mission.title}</h3>
           <p>{mission.intro}</p>
         </div>
@@ -128,8 +129,8 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
 
       <div className="mission-plan-strip glass-panel">
         <div className="mission-plan-title">
-          <span>Маршрут занятия</span>
-          <strong>{missions.length} миссии</strong>
+          <span>Мягкий маршрут</span>
+          <strong>{missions.length} задания</strong>
         </div>
         <div className="mission-plan-list">
           {missions.map((item, index) => {
@@ -214,34 +215,38 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
 
             {!currentStepPassed && (
               <p className="mission-step-helper">
-                Чтобы перейти дальше: выполните действие в IDE, нажмите Run, затем «Проверить миссию» и исправьте красные checks.
+                {usesPromptBuilder
+                  ? 'Чтобы перейти дальше: заполните поля справа, нажмите «Проверить промпт ИИ» и поправьте красные проверки.'
+                  : 'Чтобы перейти дальше: измените один маленький фрагмент, нажмите Run, затем «Проверить задание» и исправьте красные checks.'}
               </p>
             )}
 
             {currentStepPassed && <p className="mission-step-done">{activeStep.doneText}</p>}
           </div>
 
-          <div className="mission-agents">
-            <div className="mission-agents-title">
-              <Bot size={15} />
-              <span>Инструкции агентам со skills</span>
-            </div>
-            {mission.agentInstructions.map((agent) => (
-              <div key={`${agent.agentName}-${agent.skillName}`} className="mission-agent-card">
-                <strong>{agent.agentName}</strong>
-                <span>{agent.skillName}</span>
-                <p>{agent.instruction}</p>
+          {mission.agentInstructions.length > 0 && (
+            <div className="mission-agents">
+              <div className="mission-agents-title">
+                <Bot size={15} />
+                <span>Инструкции агентам</span>
               </div>
-            ))}
-          </div>
+              {mission.agentInstructions.map((agent) => (
+                <div key={`${agent.agentName}-${agent.skillName}`} className="mission-agent-card">
+                  <strong>{agent.agentName}</strong>
+                  <span>{agent.skillName}</span>
+                  <p>{agent.instruction}</p>
+                </div>
+              ))}
+            </div>
+          )}
 
           {activeMissionDone && (
             <div className="mission-unlock">
               <LockOpen size={16} />
               <span>
                 {allMissionsDone
-                  ? 'Все миссии недели готовы. Отправьте один недельный артефакт на проверку.'
-                  : `${mission.unlockText} Выберите следующую миссию в маршруте.`}
+                  ? 'Все задания недели готовы. Отправьте один недельный артефакт на проверку.'
+                  : `${mission.unlockText} Выберите следующее задание в маршруте.`}
               </span>
             </div>
           )}

@@ -89,7 +89,7 @@ export const ModuleTimeline: React.FC<ModuleTimelineProps> = ({
                     className="btn btn-primary"
                     disabled={isLocked}
                   >
-                    <Play size={14} /> Открыть MVP-мастер
+                    <Play size={14} /> Открыть практику
                   </button>
                 </div>
               </div>

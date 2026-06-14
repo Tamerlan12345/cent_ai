@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, AlertTriangle, CheckCircle,
-  BookOpen, Lightbulb, Zap, ArrowRight, Sparkles, X, Target, Copy, HelpCircle
+  BookOpen, Lightbulb, Zap, ArrowRight, Sparkles, X, Target
 } from 'lucide-react';
 import type { CourseModule } from '../types';
 import { CodeHighlight } from './CodeHighlight';
@@ -40,150 +40,10 @@ const getSlideAction = (weekId: number, slideType: CourseModule['slides'][number
 
   if (slideType === 'compare') return 'Сравните плохой и хороший prompt, затем перепишите один свой запрос по сильной версии.';
   if (slideType === 'code') return 'Кликните по непонятной строке и попросите ИИ объяснить ее простыми словами.';
-  if (slideType === 'checklist') return 'Отметьте 1 пункт, который уже готов, и 1 пункт, который надо закрыть в MVP-мастере.';
+  if (slideType === 'checklist') return 'Отметьте 1 пункт, который уже готов, и 1 пункт, который надо закрыть в задании недели.';
   if (slideType === 'diagram') return 'Назовите текущий шаг маршрута: идея, контекст, сборка, проверка или защита.';
 
   return weekActions[weekId] ?? 'Сформулируйте один следующий шаг для вашего MVP.';
-};
-
-interface SlidePractice {
-  title: string;
-  tool: string;
-  prompt: string;
-  placeholder: string;
-  starter: string;
-}
-
-interface SlideQuickCheck {
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-}
-
-const getSlidePractice = (
-  weekId: number,
-  slideId: string,
-  slideTitle: string,
-  slideType: CourseModule['slides'][number]['type'],
-): SlidePractice => {
-  if (slideId === '1-15') {
-    return {
-      title: 'Canvas за 3 строки',
-      tool: 'Здесь → потом Gemini/GPT',
-      prompt: 'Не заполняйте весь Canvas сразу. Зафиксируйте только пользователя, боль и главный сценарий.',
-      placeholder: 'Пользователь: ...\nБоль: ...\nГлавный сценарий: ...',
-      starter: '',
-    };
-  }
-
-  if (slideType === 'compare') {
-    return {
-      title: 'Перепишите запрос',
-      tool: 'ChatGPT / Gemini',
-      prompt: 'Возьмите слабый запрос со слайда и перепишите его по формуле: роль, цель, контекст, ограничения, формат.',
-      placeholder: 'Роль: ...\nЦель: ...\nКонтекст: ...\nОграничения: ...\nФормат ответа: ...',
-      starter: '',
-    };
-  }
-
-  if (slideType === 'code') {
-    return {
-      title: 'Проверьте шаблон на практике',
-      tool: 'Gemini / GPT / Antigravity',
-      prompt: 'Скопируйте только нужный фрагмент и попросите ИИ объяснить, что надо заполнить первым.',
-      placeholder: 'Что я скопирую:\nЧто попрошу объяснить:\nКакой артефакт должен получиться:',
-      starter: '',
-    };
-  }
-
-  const weeklyPractice: Record<number, SlidePractice> = {
-    1: {
-      title: 'Черновик Gem/GPT-наставника',
-      tool: 'Gemini Gems / GPTs',
-      prompt: 'Соберите личного учебного помощника по формуле Persona / Task / Context / Format.',
-      placeholder: 'Persona: ты мой наставник по MVP...\nTask: помогай задавать вопросы...\nContext: я новичок, делаю проект за 4 недели...\nFormat: отвечай коротко, с 3 шагами...',
-      starter: '',
-    },
-    2: {
-      title: 'Контекст для Antigravity',
-      tool: 'Antigravity',
-      prompt: 'Запишите, что агент должен знать до изменения файлов: цель, файлы, запреты и DoD.',
-      placeholder: 'Цель изменения:\nКакие файлы можно трогать:\nЧто нельзя менять:\nDefinition of Done:',
-      starter: '',
-    },
-    3: {
-      title: 'Задача Builder-агенту',
-      tool: 'Antigravity Manager',
-      prompt: 'Сформулируйте одну маленькую задачу для Builder, чтобы получить первый рабочий сценарий MVP.',
-      placeholder: 'Роль агента:\nОдин экран или функция:\nЧто проверить в Preview:\nКакой snapshot сделать:',
-      starter: '',
-    },
-    4: {
-      title: 'QA / Security Red Team',
-      tool: 'Gemini / GPT / Antigravity',
-      prompt: 'Опишите проверку, которую должен выполнить QA-бот перед защитой. Он проверяет, но не меняет код.',
-      placeholder: 'Роль бота:\nЧто проверить:\nКакие негативные сценарии:\nФормат отчета:',
-      starter: '',
-    },
-  };
-
-  return {
-    ...weeklyPractice[weekId],
-    title: `${weeklyPractice[weekId]?.title ?? 'Мини-практика'} · ${slideTitle}`,
-  };
-};
-
-const getSlideQuickCheck = (
-  weekId: number,
-  slideType: CourseModule['slides'][number]['type'],
-): SlideQuickCheck => {
-  if (slideType === 'compare') {
-    return {
-      question: 'Какой запрос лучше для AI-агента?',
-      options: ['Сделай красиво и как-нибудь', 'Роль + цель + контекст + ограничения + DoD'],
-      correctIndex: 1,
-      explanation: 'Агенту нужны рамки. Без роли, контекста и DoD он угадывает и часто ломает проект.',
-    };
-  }
-
-  if (slideType === 'code') {
-    return {
-      question: 'Что делать, если код на слайде непонятен?',
-      options: ['Просить ИИ переписать всё сразу', 'Попросить объяснить 1 строку и проверить Preview'],
-      correctIndex: 1,
-      explanation: 'Новичку безопаснее разбирать код маленькими кусками и проверять результат после каждого шага.',
-    };
-  }
-
-  const weeklyChecks: Record<number, SlideQuickCheck> = {
-    1: {
-      question: 'Что обязательно нужно в Gem/GPT-наставнике?',
-      options: ['Только красивое имя', 'Persona, Task, Context, Format и тестовый preview'],
-      correctIndex: 1,
-      explanation: 'Gems и GPTs становятся полезными, когда у них есть роль, задача, контекст, формат и проверка на реальном вопросе.',
-    },
-    2: {
-      question: 'Что дать Antigravity до первой правки?',
-      options: ['Только “сделай MVP”', 'Brief, AGENTS.md, ограничения и DoD'],
-      correctIndex: 1,
-      explanation: 'Контекстные файлы уменьшают хаос: агент понимает проект, границы и критерии готовности.',
-    },
-    3: {
-      question: 'Что строим первым в MVP?',
-      options: ['Все функции сразу', 'Один главный пользовательский сценарий'],
-      correctIndex: 1,
-      explanation: 'Первый успех — это один рабочий сценарий, который можно показать и проверить.',
-    },
-    4: {
-      question: 'Что нужно перед внутренним deploy?',
-      options: ['Только красивый экран', 'QA, Security, негативные тесты и ссылка preview'],
-      correctIndex: 1,
-      explanation: 'Перед защитой важна не только красота, но и проверка ошибок, XSS, пустого ввода и восстановления.',
-    },
-  };
-
-  return weeklyChecks[weekId] ?? weeklyChecks[1];
 };
 
 interface SlideDeckProps {
@@ -206,20 +66,11 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   const [aiResult, setAiResult] = useState<ExplainResult | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiFocusLine, setAiFocusLine] = useState<number | null>(null);
-  const [slideDrafts, setSlideDrafts] = useState<Record<string, string>>({});
-  const [completedSlideTasks, setCompletedSlideTasks] = useState<Record<string, boolean>>({});
-  const [quickAnswers, setQuickAnswers] = useState<Record<string, number>>({});
 
   const activeModule = modules.find((m) => m.id === selectedWeekId) || modules[0];
   const activeSlide = activeModule.slides[currentSlideIndex] || activeModule.slides[0];
   const progress = ((currentSlideIndex + 1) / activeModule.slides.length) * 100;
   const slideAction = getSlideAction(selectedWeekId, activeSlide.type);
-  const slidePractice = getSlidePractice(selectedWeekId, activeSlide.id, activeSlide.title, activeSlide.type);
-  const quickCheck = getSlideQuickCheck(selectedWeekId, activeSlide.type);
-  const slideKey = `${selectedWeekId}-${activeSlide.id}`;
-  const slideDraft = slideDrafts[slideKey] ?? slidePractice.starter;
-  const slideTaskDone = Boolean(completedSlideTasks[slideKey]);
-  const selectedQuickAnswer = quickAnswers[slideKey];
 
   // Сброс ИИ-панели при смене слайда/недели
   useEffect(() => {
@@ -291,26 +142,6 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
     setAnimClass('slide-enter-right');
   };
 
-  const handlePracticeDraftChange = (value: string) => {
-    setSlideDrafts((current) => ({ ...current, [slideKey]: value }));
-    setCompletedSlideTasks((current) => ({ ...current, [slideKey]: false }));
-  };
-
-  const handleCopySlidePractice = () => {
-    const text = [
-      `Слайд: ${activeSlide.title}`,
-      `Инструмент: ${slidePractice.tool}`,
-      `Задача: ${slidePractice.prompt}`,
-      '',
-      slideDraft || slidePractice.placeholder,
-    ].join('\n');
-    void navigator.clipboard.writeText(text);
-  };
-
-  const handleCompleteSlideTask = () => {
-    setCompletedSlideTasks((current) => ({ ...current, [slideKey]: true }));
-  };
-
   const goToPractice = () => navigate(`/practice?week=${selectedWeekId}`);
 
   useEffect(() => {
@@ -365,7 +196,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
             <p>{slideAction}</p>
           </div>
           <button type="button" className="slide-action-cta" onClick={goToPractice}>
-            В MVP-мастер <ArrowRight size={14} />
+            Задание недели <ArrowRight size={14} />
           </button>
         </div>
 
@@ -528,67 +359,6 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
           )}
         </div>
 
-        <div className="slide-practice-lab">
-          <div className={`slide-task-card ${slideTaskDone ? 'done' : ''}`}>
-            <div className="slide-task-header">
-              <div>
-                <span className="slide-task-eyebrow">
-                  <Target size={13} /> Практика 3 минуты
-                </span>
-                <h3>{slidePractice.title}</h3>
-              </div>
-              <span className="slide-tool-badge">{slidePractice.tool}</span>
-            </div>
-            <p>{slidePractice.prompt}</p>
-            <textarea
-              value={slideDraft}
-              onChange={(event) => handlePracticeDraftChange(event.target.value)}
-              placeholder={slidePractice.placeholder}
-              rows={4}
-            />
-            <div className="slide-task-actions">
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleCopySlidePractice}>
-                <Copy size={13} /> Скопировать
-              </button>
-              <button type="button" className="btn btn-primary btn-sm" onClick={handleCompleteSlideTask}>
-                <CheckCircle size={13} /> {slideTaskDone ? 'Сделано' : 'Отметить'}
-              </button>
-            </div>
-          </div>
-
-          <div className="slide-quick-check">
-            <span className="slide-task-eyebrow">
-              <HelpCircle size={13} /> Мини-проверка
-            </span>
-            <h3>{quickCheck.question}</h3>
-            <div className="slide-quick-options">
-              {quickCheck.options.map((option, index) => {
-                const answered = selectedQuickAnswer !== undefined;
-                const isSelected = selectedQuickAnswer === index;
-                const isCorrect = quickCheck.correctIndex === index;
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => setQuickAnswers((current) => ({ ...current, [slideKey]: index }))}
-                    className={`slide-quick-option ${isSelected ? 'selected' : ''} ${
-                      answered && isCorrect ? 'correct' : ''
-                    } ${answered && isSelected && !isCorrect ? 'wrong' : ''}`}
-                  >
-                    {option}
-                  </button>
-                );
-              })}
-            </div>
-            {selectedQuickAnswer !== undefined && (
-              <p className="slide-quick-feedback">
-                {selectedQuickAnswer === quickCheck.correctIndex ? 'Верно. ' : 'Почти. '}
-                {quickCheck.explanation}
-              </p>
-            )}
-          </div>
-        </div>
-
         {/* ── ИИ-учитель ── */}
         <div className="ai-teacher-zone">
           {!aiResult && !aiLoading && (
@@ -661,7 +431,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
               onClick={goToPractice}
               className="btn btn-primary slide-nav-btn"
             >
-              Открыть MVP-мастер <ArrowRight size={16} />
+              Открыть задание недели <ArrowRight size={16} />
             </button>
           ) : (
             <button

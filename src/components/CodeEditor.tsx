@@ -328,7 +328,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         `## Неделя`,
         `${weekId}: ${weekTitle}`,
         '',
-        '## Текущая миссия',
+        '## Текущее задание',
         missionTitle,
         '',
         '## Артефакт',
@@ -519,7 +519,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         const missionChecksPassed =
           blockingResults.length > 0 && blockingResults.every((result) => result.passed);
         if (!missionChecksPassed) {
-          alert('Сначала пройдите обязательные проверки миссии. ИИ-ревью откроется после зеленых checks.');
+          alert('Сначала пройдите обязательные проверки задания. ИИ-ревью откроется после зеленых checks.');
           return;
         }
       }
@@ -675,7 +675,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               disabled={checkingMission}
               className="btn btn-primary btn-sm"
             >
-              {checkingMission ? 'Проверяю...' : 'Проверить миссию'}
+              {checkingMission ? 'Проверяю...' : 'Проверить задание'}
             </button>
           </div>
 
@@ -706,7 +706,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       <div className="ide-learning-cockpit glass-panel">
         <div className="ide-learning-main">
           <span className="ide-learning-eyebrow">
-            <Route size={14} /> MVP-мастер · учебный режим
+            <Route size={14} /> Учебная песочница
           </span>
           <h3>{missionFocusText}</h3>
           <p>
@@ -714,7 +714,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             нажмите Run, затем Check. Если всё зелёное — делайте Snapshot и отправляйте на ревью.
           </p>
         </div>
-        <div className="ide-learning-steps" aria-label="Порядок работы в MVP-мастере">
+        <div className="ide-learning-steps" aria-label="Порядок работы в учебной песочнице">
           {[
             ['1', 'Шаг', currentMissionStep?.title ?? 'Выберите файл'],
             ['2', 'Run', 'Посмотрите Preview'],
@@ -1026,9 +1026,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               onClick={handleRunMissionChecks}
               disabled={checkingMission}
               className="btn btn-outline"
-              title="Запустить автопроверки текущей миссии"
+              title="Запустить автопроверки текущего задания"
             >
-              <CheckCircle2 size={16} /> {checkingMission ? 'Проверяю...' : 'Проверить миссию'}
+              <CheckCircle2 size={16} /> {checkingMission ? 'Проверяю...' : 'Проверить задание'}
             </button>
           )}
           <button onClick={handleInternalDeploy} className="btn btn-secondary" title="Сохранить и открыть /preview/:id">
