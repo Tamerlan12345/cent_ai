@@ -6,7 +6,13 @@ import type { GradeResult } from '../lib/aiGateway';
 import { runStaticChecks } from '../lib/grading';
 import type { CheckResult, FunctionalTest, SandboxFiles } from '../lib/grading';
 import { PASSING_SCORE } from '../lib/constants';
-import { buildSandboxDoc, runFunctionalTests, useSandboxConsole } from '../lib/consoleBridge';
+import {
+  buildSandboxDoc,
+  runFunctionalTests,
+  SANDBOX_STORAGE_SHIM,
+  useSandboxConsole,
+  waitForSandboxReady,
+} from '../lib/consoleBridge';
 import {
   FileCode,
   FileText,
@@ -265,6 +271,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             ${c}
           </style>
           <script>
+            ${SANDBOX_STORAGE_SHIM}
+
             window.onerror = function(message, source, lineno, colno, error) {
               window.parent.postMessage({ type: 'IFRAME_ERROR', message: message }, '*');
               return false;
@@ -344,8 +352,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         checks,
         '',
         '## Ручной сценарий',
-        '1. Нажать Run.',
-        '2. Проверить Live Preview.',
+        '1. Проверить Live Preview: он обновляется автоматически.',
+        '2. Если состояние зависло, нажать Перезапуск.',
         '3. Исправить ошибки из Problems.',
         '4. Сделать Commit/Snapshot.',
         '5. Отправить работу на AI-review.',
@@ -465,8 +473,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     if (functionalTests.length > 0) {
       sandboxConsole.clear();
       setIframeError(null);
+      const ready = waitForSandboxReady(bridgeId);
       setPreviewDoc(getPreviewDoc(html, css, js));
-      await new Promise((resolve) => window.setTimeout(resolve, 300));
+      await ready;
       functionalResults = await runFunctionalTests(previewFrameRef.current, bridgeId, functionalTests);
     }
 
@@ -911,8 +920,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               <button onClick={handleResetTemplate} className="btn btn-secondary btn-sm" title="Сбросить код">
                 <RefreshCw size={12} />
               </button>
-              <button onClick={handleRunCode} className="btn btn-secondary btn-sm" title="Запустить код">
-                <Play size={12} /> Запуск
+              <button onClick={handleRunCode} className="btn btn-secondary btn-sm" title="Перезапустить Live Preview">
+                <Play size={12} /> Перезапуск
               </button>
             </div>
           </div>
@@ -972,7 +981,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                   </p>
                 ))
               ) : (
-                <p className="console-line muted">Ошибок нет. Нажмите Run или Check для обновления.</p>
+                <p className="console-line muted">Ошибок нет. Preview обновляется автоматически; Перезапуск нужен для чистого запуска.</p>
               )}
             </div>
           </div>

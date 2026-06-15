@@ -20,6 +20,62 @@ interface BridgeMessage {
   results?: { id: string; passed: boolean; error?: string }[];
 }
 
+/** Изолированный storage для sandboxed iframe без allow-same-origin. */
+export const SANDBOX_STORAGE_SHIM = `
+  (function () {
+    function createStorage() {
+      var data = Object.create(null);
+      var MAX_KEYS = 100;
+      var MAX_VALUE_LENGTH = 200000;
+      return {
+        get length() {
+          return Object.keys(data).length;
+        },
+        key: function (index) {
+          var keys = Object.keys(data);
+          return keys[index] || null;
+        },
+        getItem: function (key) {
+          var k = String(key);
+          return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null;
+        },
+        setItem: function (key, value) {
+          var k = String(key);
+          var v = String(value);
+          if (!Object.prototype.hasOwnProperty.call(data, k) && Object.keys(data).length >= MAX_KEYS) {
+            throw new Error('Sandbox localStorage quota exceeded');
+          }
+          if (v.length > MAX_VALUE_LENGTH) {
+            throw new Error('Sandbox localStorage value is too large');
+          }
+          data[k] = v;
+        },
+        removeItem: function (key) {
+          delete data[String(key)];
+        },
+        clear: function () {
+          data = Object.create(null);
+        }
+      };
+    }
+
+    function installStorage(name) {
+      var storage = createStorage();
+      try {
+        Object.defineProperty(window, name, {
+          value: storage,
+          configurable: true
+        });
+      } catch (err) {
+        window['__sandbox_' + name] = storage;
+      }
+    }
+
+    installStorage('localStorage');
+    installStorage('sessionStorage');
+  })();
+`;
+
 /** Собирает полный srcDoc песочницы с console-shim и тест-раннером */
 export function buildSandboxDoc(files: SandboxFiles, bridgeId: string): string {
   const bridgeScript = `
@@ -112,6 +168,7 @@ export function buildSandboxDoc(files: SandboxFiles, bridgeId: string): string {
 
       ${files.css}
     </style>
+    <script>${SANDBOX_STORAGE_SHIM}</script>
     <script>${bridgeScript}</script>
   </head>
   <body>
@@ -141,6 +198,26 @@ export function useSandboxConsole(bridgeId: string) {
   const errors = entries.filter((e) => e.level === 'error');
 
   return { entries, errors, clear };
+}
+
+/** Ждёт, пока iframe песочницы сообщит, что DOM готов к functional tests. */
+export function waitForSandboxReady(bridgeId: string, timeoutMs = 2000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(() => {
+      window.removeEventListener('message', onMessage);
+      resolve(false);
+    }, timeoutMs);
+
+    const onMessage = (ev: MessageEvent<BridgeMessage>) => {
+      const d = ev.data;
+      if (!d || d.__sandbox !== bridgeId || d.type !== 'ready') return;
+      window.clearTimeout(timer);
+      window.removeEventListener('message', onMessage);
+      resolve(true);
+    };
+
+    window.addEventListener('message', onMessage);
+  });
 }
 
 /** Запускает функциональные тесты внутри iframe песочницы. Таймаут → все failed. */
