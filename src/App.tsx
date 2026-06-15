@@ -27,6 +27,7 @@ import {
   GraduationCap,
   Home,
   Lock,
+  PackageCheck,
   Route as RouteIcon,
   Send,
   Target,
@@ -354,22 +355,35 @@ function App() {
                             <span>{activePracticePlan.lesson}</span>
                           </div>
                           <p className="task-long-desc">{activeModule.practice.description}</p>
-                          <div className="task-steps">
-                            <h4>Инструкция по шагам:</h4>
-                            <ol>
-                              {(activeModule.practice.steps || []).map((step, idx) => (
-                                <li key={idx}>{step}</li>
-                              ))}
-                            </ol>
-                          </div>
-                          <div className="task-hints">
-                            <h4>Подсказки:</h4>
-                            <ul>
-                              {(activeModule.practice.hints || []).map((hint, idx) => (
-                                <li key={idx}>{hint}</li>
-                              ))}
-                            </ul>
-                          </div>
+                          {activeModule.practice.expectedOutput && (
+                            <div className="practice-output-summary">
+                              <PackageCheck size={16} />
+                              <div>
+                                <span>Итог недели</span>
+                                <strong>{activeModule.practice.expectedOutput}</strong>
+                              </div>
+                            </div>
+                          )}
+                          {!!activeModule.practice.steps?.length && (
+                            <div className="task-steps">
+                              <h4>Инструкция по шагам:</h4>
+                              <ol>
+                                {activeModule.practice.steps.map((step, idx) => (
+                                  <li key={idx}>{step}</li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
+                          {!!activeModule.practice.hints?.length && (
+                            <div className="task-hints">
+                              <h4>Подсказки:</h4>
+                              <ul>
+                                {activeModule.practice.hints.map((hint, idx) => (
+                                  <li key={idx}>{hint}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
 
                         <div className="weekly-homework-card glass-panel">
@@ -378,7 +392,7 @@ function App() {
                             <h3>Домашка на неделю</h3>
                           </div>
                           <p>
-                            Не больше одного артефакта: <strong>{activePracticePlan.artifact}</strong>.
+                            Главный набор артефактов: <strong>{activePracticePlan.artifact}</strong>.
                           </p>
                           <ul>
                             {activePracticePlan.homework.map((item) => (

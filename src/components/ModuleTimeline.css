@@ -212,6 +212,83 @@
   border-left-color: var(--accent-primary);
 }
 
+.module-artifact-strip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: var(--radius-sm);
+  background: rgba(16, 185, 129, 0.045);
+}
+
+.module-artifact-strip svg {
+  margin-top: 0.15rem;
+  color: var(--accent-success);
+}
+
+.module-artifact-strip div {
+  min-width: 0;
+}
+
+.module-artifact-strip span,
+.module-mission-strip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.module-artifact-strip strong {
+  display: block;
+  margin-top: 0.22rem;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.module-mission-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.module-mission-strip-label {
+  color: var(--accent-primary);
+}
+
+.module-mission-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.module-mission-chip {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+[data-theme="light"] .module-artifact-strip {
+  background: rgba(16, 185, 129, 0.055);
+}
+
+[data-theme="light"] .module-mission-chip {
+  background: rgba(255, 255, 255, 0.68);
+}
+
 .card-actions {
   display: flex;
   gap: 1rem;

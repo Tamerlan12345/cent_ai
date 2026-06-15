@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Play, BookOpen, Clock } from 'lucide-react';
+import { CheckCircle2, Play, BookOpen, Clock, PackageCheck, Route } from 'lucide-react';
 import type { CourseModule } from '../types';
 import './ModuleTimeline.css';
 
@@ -75,6 +75,29 @@ export const ModuleTimeline: React.FC<ModuleTimelineProps> = ({
                 <div className="module-concept">
                   <strong>Концепция:</strong> {truncateWords(module.concept, 120)}
                 </div>
+
+                <div className="module-artifact-strip">
+                  <PackageCheck size={15} />
+                  <div>
+                    <span>Результат недели</span>
+                    <strong>{truncateWords(module.practice.expectedOutput ?? module.practice.title, 132)}</strong>
+                  </div>
+                </div>
+
+                {!!module.practice.missions?.length && (
+                  <div className="module-mission-strip" aria-label={`Миссии недели ${module.id}`}>
+                    <span className="module-mission-strip-label">
+                      <Route size={13} /> Миссии
+                    </span>
+                    <div className="module-mission-chips">
+                      {module.practice.missions.slice(0, 3).map((mission, missionIndex) => (
+                        <span key={mission.id} className="module-mission-chip">
+                          {missionIndex + 1}. {truncateWords(mission.artifact, 42)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="card-actions">
                   <button

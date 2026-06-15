@@ -77,7 +77,6 @@ const getPracticeBridge = (
   const isFinalSlide = slideCount > 0 && slideIndex === slideCount - 1;
 
   return {
-    eyebrow: isFinalSlide ? 'Переход в мастерскую' : 'Мостик к миссии',
     title: mission?.title ?? module.practice.title,
     action: isFinalSlide ? firstStep?.instruction ?? fallbackAction : fallbackAction,
     artifact: mission?.artifact ?? module.practice.expectedOutput ?? 'артефакт недели',
@@ -117,6 +116,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   const slideTypeLabel = activeSlide ? getSlideTypeLabel(activeSlide.type) : '';
   const practiceBridge =
     activeModule && activeSlide ? getPracticeBridge(activeModule, safeSlideIndex, slideCount, slideAction) : null;
+  const showPracticeGateway = practiceBridge?.isFinalSlide ?? false;
 
   useEffect(() => {
     if (slideCount > 0 && currentSlideIndex > slideCount - 1) {
@@ -285,7 +285,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
           </div>
         </div>
 
-        <div className="slide-workspace">
+        <div className={`slide-workspace ${showPracticeGateway ? 'has-rail' : 'no-rail'}`}>
           {/* Slide Body with animation */}
           <div className={`slide-body ${animClass}`} key={`${selectedWeekId}-${currentSlideIndex}`}>
             {/* ── IMAGE SUPPORT ── */}
@@ -443,19 +443,14 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
             )}
           </div>
 
-          {practiceBridge && (
-            <aside className={`slide-context-rail ${practiceBridge.isFinalSlide ? 'final' : ''}`}>
-              <div className="slide-quick-action">
-                <span className="slide-rail-label">
-                  <Sparkles size={13} /> Сделать сейчас
-                </span>
-                <p>{slideAction}</p>
-              </div>
+          {showPracticeGateway && practiceBridge && (
+            <aside className="slide-context-rail final">
               <div className="slide-mission-card">
                 <span className="slide-rail-label">
-                  <Target size={13} /> {practiceBridge.eyebrow}
+                  <Target size={13} /> Мастерская недели
                 </span>
                 <strong>{practiceBridge.title}</strong>
+                <p className="slide-rail-action">{practiceBridge.action}</p>
                 <div className="slide-rail-artifact">
                   <small>Артефакт</small>
                   <span>{practiceBridge.artifact}</span>

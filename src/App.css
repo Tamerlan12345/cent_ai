@@ -346,6 +346,41 @@
   color: var(--text-secondary);
 }
 
+.practice-output-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.9rem;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius-sm);
+  background: rgba(16, 185, 129, 0.045);
+}
+
+.practice-output-summary svg {
+  margin-top: 0.15rem;
+  color: var(--accent-success);
+}
+
+.practice-output-summary div {
+  min-width: 0;
+}
+
+.practice-output-summary span {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--accent-success);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.practice-output-summary strong {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
 .task-steps h4,
 .task-hints h4 {
   font-size: 0.9rem;
