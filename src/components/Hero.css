@@ -142,13 +142,39 @@
 .hero-cta-buttons {
   display: flex;
   gap: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 0.85rem;
 }
 
 .btn-lg {
   padding: 0.875rem 1.75rem;
   font-size: 1rem;
   border-radius: var(--radius-md);
+}
+
+.hero-tour-link {
+  align-self: flex-start;
+  margin: 0 0 2.6rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.hero-tour-link:hover,
+.hero-tour-link:focus-visible {
+  color: var(--accent-primary);
+  text-decoration-color: currentColor;
+  outline: none;
 }
 
 .hero-features-row {

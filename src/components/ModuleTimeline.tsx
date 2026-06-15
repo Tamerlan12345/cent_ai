@@ -102,17 +102,17 @@ export const ModuleTimeline: React.FC<ModuleTimelineProps> = ({
                 <div className="card-actions">
                   <button
                     onClick={() => onSelectWeek(module.id, '/slides')}
-                    className="btn btn-secondary"
-                    disabled={isLocked}
-                  >
-                    <BookOpen size={14} /> Читать слайды
-                  </button>
-                  <button
-                    onClick={() => onSelectWeek(module.id, '/practice')}
                     className="btn btn-primary"
                     disabled={isLocked}
                   >
-                    <Play size={14} /> Открыть практику
+                    <BookOpen size={14} /> Начать неделю
+                  </button>
+                  <button
+                    onClick={() => onSelectWeek(module.id, '/practice')}
+                    className="btn btn-secondary"
+                    disabled={isLocked}
+                  >
+                    <Play size={14} /> Мастерская
                   </button>
                 </div>
               </div>

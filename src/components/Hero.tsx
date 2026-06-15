@@ -5,9 +5,10 @@ import './Hero.css';
 
 interface HeroProps {
   onStartTraining: () => void;
+  onOpenTour: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onStartTraining }) => {
+export const Hero: React.FC<HeroProps> = ({ onStartTraining, onOpenTour }) => {
   return (
     <section className="hero-section">
       {/* Декоративный слой: анимированный градиент + неоновые орбы (чистый CSS) */}
@@ -42,6 +43,10 @@ export const Hero: React.FC<HeroProps> = ({ onStartTraining }) => {
               Программа курса
             </a>
           </div>
+
+          <button type="button" className="hero-tour-link hero-stagger-4" onClick={onOpenTour}>
+            Демо-тур 10 минут: попробовать интерфейс без полного курса
+          </button>
 
           <div className="hero-features-row hero-stagger-5">
             <div className="hero-feature-item">

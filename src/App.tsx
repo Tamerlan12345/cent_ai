@@ -234,7 +234,10 @@ function App() {
             path="/"
             element={
               <main className="main-content">
-                <Hero onStartTraining={() => navigate('/tour')} />
+                <Hero
+                  onStartTraining={() => navigate('/slides?week=1')}
+                  onOpenTour={() => navigate('/tour')}
+                />
                 <ModuleTimeline
                   modules={courseModules}
                   completedWeeks={completedWeeks}

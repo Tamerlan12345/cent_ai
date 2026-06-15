@@ -26,8 +26,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems = [
     { id: '/', label: 'Программа' },
-    { id: '/slides', label: 'Слайды' },
-    { id: '/practice', label: 'Практика' },
+    { id: '/slides', label: 'Уроки' },
+    { id: '/practice', label: 'Мастерская' },
     { id: '/resources', label: 'Ресурсы' },
   ];
 

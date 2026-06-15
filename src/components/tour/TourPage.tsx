@@ -243,7 +243,7 @@ export const TourPage: React.FC<TourPageProps> = ({ userProfile }) => {
             </button>
             <button
               className="btn btn-primary"
-              onClick={() => navigate(userProfile ? '/slides' : '/auth')}
+              onClick={() => navigate(userProfile ? '/slides?week=1' : '/auth', userProfile ? undefined : { state: { returnTo: '/slides?week=1' } })}
             >
               <Rocket size={16} /> {userProfile ? 'Начать полный курс' : 'Создать аккаунт и начать курс'}
             </button>
