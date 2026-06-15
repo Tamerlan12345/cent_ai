@@ -152,6 +152,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.08);
 }
 
 .mission-agents-title {
@@ -161,10 +165,16 @@
   color: var(--text-primary);
   font-weight: 600;
   font-size: 0.95rem;
+  cursor: pointer;
+  list-style: none;
 }
 
 .mission-agents-title svg {
   color: var(--accent-primary);
+}
+
+.mission-agents-title::-webkit-details-marker {
+  display: none;
 }
 
 .mission-agent-card {

@@ -36,62 +36,62 @@ import './App.css';
 const weeklyPracticePlan = [
   {
     weekId: 1,
-    lesson: 'Собрать идею MVP, AI-наставника и первый Canvas',
-    artifact: 'vibe-canvas.md',
+    lesson: 'Собрать ясную идею, AI-наставника и промпт-линзу',
+    artifact: 'starter-canvas.md',
     handoff: {
       tool: 'Gemini / Gem',
-      action: 'Создайте личного MVP-наставника и попросите его задать 10 вопросов по идее.',
-      bringBack: 'Готовый Canvas и 1 выбранная идея.',
+      action: 'Создайте личного MVP-наставника и попросите его проверить идею через 10 коротких вопросов.',
+      bringBack: 'Одна идея, одна боль пользователя, один сценарий и черновик Canvas.',
     },
     homework: [
-      'Выбрать одну идею MVP из 10 вариантов',
-      'Заполнить Vibe Coding Canvas',
-      'Описать главный сценарий пользователя в 5 шагах',
+      'Выбрать одну идею MVP и одну аудиторию',
+      'Заполнить starter Canvas: боль, сценарий, ноу-хау фишка',
+      'Сохранить prompt для AI-наставника и media prompt',
     ],
   },
   {
     weekId: 2,
-    lesson: 'Превратить Canvas в PROJECT_BRIEF, Screen Map и AGENTS.md',
+    lesson: 'Превратить идею в первый экран и контракт для агента',
     artifact: 'PROJECT_BRIEF.md + AGENTS.md',
     handoff: {
       tool: 'Antigravity',
-      action: 'Откройте новый проект, вставьте brief и попросите агента собрать структуру файлов.',
+      action: 'Откройте новый проект, добавьте PROJECT_BRIEF, SCREEN_ELEMENT_MAP и AGENTS.md, затем попросите агента собрать только структуру файлов.',
       bringBack: 'PROJECT_BRIEF.md, Screen Map и AGENTS.md.',
     },
     homework: [
       'Собрать контекстный пакет проекта',
-      'Проверить, что MVP ограничен 3 функциями',
-      'Подготовить первый запрос для Antigravity',
+      'Проверить, что первый экран закрывает один сценарий',
+      'Подготовить первый маленький запрос для Antigravity',
     ],
   },
   {
     weekId: 3,
-    lesson: 'Собрать первый рабочий сценарий MVP в IDE',
-    artifact: 'Рабочий MVP-снапшот',
+    lesson: 'Оживить первый сценарий: форма, состояние, список, результат',
+    artifact: 'first-scenario-snapshot',
     handoff: {
       tool: 'Antigravity Manager',
-      action: 'Повторите главный экран через Builder-агента и попросите Reviewer объяснить diff.',
-      bringBack: 'Снапшот, скриншот и 3 вывода по работе агента.',
+      action: 'Повторите первый сценарий через Builder-агента и попросите Reviewer объяснить diff простыми словами.',
+      bringBack: 'Рабочий snapshot, скриншот Preview и 3 вывода по работе агента.',
     },
     homework: [
-      'Повторить главный экран в Antigravity',
+      'Перенести паттерн формы и списка на свою сущность',
       'Сделать snapshot/commit после рабочего состояния',
-      'Записать 3 пункта, где агент ошибся или помог',
+      'Записать 3 пункта: где агент помог, ошибся или потребовал уточнения',
     ],
   },
   {
     weekId: 4,
-    lesson: 'Закрыть QA, безопасность, внутренний deploy и защиту',
-    artifact: 'deploy-link + defense-script',
+    lesson: 'Закрыть Security Gate, internal deploy и защиту',
+    artifact: 'preview-link + defense-script.md',
     handoff: {
       tool: 'Gemini / GPT / Antigravity',
-      action: 'Запустите QA/Security-роль, затем попросите Demo Coach собрать речь защиты.',
-      bringBack: 'Ссылка на preview, Quality Gate и 3-минутная речь.',
+      action: 'Запустите QA/Security-роль, затем попросите Demo Coach собрать 5 слайдов и речь на 3 минуты.',
+      bringBack: 'Preview-ссылка, Quality Gate, defense script и roadmap из 3 улучшений.',
     },
     homework: [
-      'Прогнать финальный Quality Gate',
-      'Подготовить 3-минутную речь защиты',
-      'Сохранить roadmap следующих 3 улучшений',
+      'Прогнать финальный Security/Quality Gate',
+      'Опубликовать внутренний preview и проверить ссылку',
+      'Сохранить defense script и roadmap следующих 3 улучшений',
     ],
   },
 ] as const;
@@ -285,10 +285,10 @@ function App() {
                       <span className="practice-page-eyebrow">
                         4 недели · 4 занятия · один <Term id="mvp">MVP</Term>
                       </span>
-                      <h2 className="practice-page-title">MVP-мастер</h2>
+                      <h2 className="practice-page-title">Мастерская недели</h2>
                       <p className="practice-page-subtitle">
-                        Практика встроена в маршрут: на занятии делаем короткие миссии,
-                        на неделю остается только понятный артефакт проекта.
+                        Мастерская продолжает слайды: один маленький шаг, быстрый check,
+                        понятный артефакт недели и только потом домашка, quiz и внешние инструменты.
                       </p>
                     </div>
                   </div>
@@ -320,8 +320,6 @@ function App() {
                     })}
                   </div>
 
-                  {!isWeekLocked && <MvpCaseLab />}
-
                   {isWeekLocked ? (
                     lockedScreen
                   ) : activeModule ? (
@@ -334,13 +332,13 @@ function App() {
                         </div>
                         <div>
                           <span>2</span>
-                          <strong>Домашка</strong>
-                          <small>Один недельный артефакт</small>
+                          <strong>Check</strong>
+                          <small>Зелёные проверки</small>
                         </div>
                         <div>
                           <span>3</span>
-                          <strong>Quiz</strong>
-                          <small>Порог зачёта 80%</small>
+                          <strong>Артефакт</strong>
+                          <small>Домашка и quiz после миссии</small>
                         </div>
                       </div>
 
@@ -397,7 +395,7 @@ function App() {
                           <div className="handoff-route">
                             <div>
                               <span>1 · Здесь</span>
-                              <p>Пройдите миссии недели в MVP-мастере.</p>
+                              <p>Пройдите рабочую миссию в мастерской недели.</p>
                             </div>
                             <div>
                               <span>2 · {activePracticePlan.handoff.tool}</span>
@@ -455,17 +453,12 @@ function App() {
                       </div>
 
                       <div className="workspace-right">
-                        <PracticeTimer
-                          key={selectedWeekId}
-                          durationMinutes={activeModule.practice.durationMinutes}
-                        />
-
                         <div className="prompt-builder-interactive-card glass-panel">
                           <div className="card-header-iconified">
                             <GraduationCap className="card-header-icon" />
                             <h3>
                               {activeModule.practice.mode === 'mission'
-                                ? 'MVP-мастер недели'
+                                ? 'Рабочая миссия недели'
                                 : activeModule.practice.type === 'prompt'
                                   ? 'Конструктор инженерных запросов'
                                   : 'IDE проекта'}
@@ -500,6 +493,11 @@ function App() {
                           )}
                         </div>
 
+                        <PracticeTimer
+                          key={selectedWeekId}
+                          durationMinutes={activeModule.practice.durationMinutes}
+                        />
+
                         <div className="quiz-container-workspace">
                           <Quiz
                             key={selectedWeekId}
@@ -510,6 +508,7 @@ function App() {
                         </div>
                       </div>
                       </div>
+                      <MvpCaseLab />
                     </>
                   ) : null}
                 </main>

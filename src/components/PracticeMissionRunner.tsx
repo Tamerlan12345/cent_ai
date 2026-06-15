@@ -117,7 +117,7 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
     <div className="mission-runner-wrapper">
       <div className="mission-runner-header glass-panel">
         <div>
-          <span className="mission-eyebrow">Задание недели</span>
+          <span className="mission-eyebrow">Рабочая миссия</span>
           <h3>{mission.title}</h3>
           <p>{mission.intro}</p>
         </div>
@@ -129,8 +129,8 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
 
       <div className="mission-plan-strip glass-panel">
         <div className="mission-plan-title">
-          <span>Мягкий маршрут</span>
-          <strong>{missions.length} задания</strong>
+          <span>Маршрут артефакта</span>
+          <strong>{missions.length} миссии</strong>
         </div>
         <div className="mission-plan-list">
           {missions.map((item, index) => {
@@ -225,11 +225,11 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
           </div>
 
           {mission.agentInstructions.length > 0 && (
-            <div className="mission-agents">
-              <div className="mission-agents-title">
+            <details className="mission-agents">
+              <summary className="mission-agents-title">
                 <Bot size={15} />
                 <span>Инструкции агентам</span>
-              </div>
+              </summary>
               {mission.agentInstructions.map((agent) => (
                 <div key={`${agent.agentName}-${agent.skillName}`} className="mission-agent-card">
                   <strong>{agent.agentName}</strong>
@@ -237,7 +237,7 @@ export const PracticeMissionRunner: React.FC<PracticeMissionRunnerProps> = ({
                   <p>{agent.instruction}</p>
                 </div>
               ))}
-            </div>
+            </details>
           )}
 
           {activeMissionDone && (

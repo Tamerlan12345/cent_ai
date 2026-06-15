@@ -40,7 +40,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -60,7 +60,7 @@
 }
 
 .practice-page-title {
-  font-size: 2rem;
+  font-size: clamp(1.65rem, 3vw, 2rem);
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
@@ -241,8 +241,8 @@
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 400px 1fr;
-  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
   align-items: start;
 }
 
@@ -250,7 +250,18 @@
 .workspace-right {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.25rem;
+}
+
+.workspace-right {
+  order: 1;
+}
+
+.workspace-left {
+  order: 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
 }
 
 /* Task Detail Cards */
@@ -264,6 +275,10 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+.prompt-builder-interactive-card {
+  padding: 1.15rem;
 }
 
 .card-header-iconified {
@@ -459,7 +474,7 @@
 }
 
 .quiz-container-workspace {
-  margin-top: 1rem;
+  margin-top: 0;
 }
 
 /* Global Footer */
@@ -501,9 +516,9 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .workspace-grid {
+  .workspace-grid,
+  .workspace-left {
     grid-template-columns: 1fr;
-    gap: 2rem;
   }
 }
 

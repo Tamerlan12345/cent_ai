@@ -46,6 +46,32 @@ const getSlideAction = (weekId: number, slideType: CourseModule['slides'][number
   return weekActions[weekId] ?? 'Сформулируйте один следующий шаг для вашего MVP.';
 };
 
+const getPracticeBridge = (
+  module: CourseModule,
+  slideIndex: number,
+  slideCount: number,
+  fallbackAction: string,
+) => {
+  const missions = module.practice.missions ?? [];
+  const missionIndex =
+    missions.length > 0 && slideCount > 0
+      ? Math.min(missions.length - 1, Math.floor((slideIndex / Math.max(slideCount - 1, 1)) * missions.length))
+      : 0;
+  const mission = missions[missionIndex];
+  const firstStep = mission?.steps[0];
+  const isFinalSlide = slideCount > 0 && slideIndex === slideCount - 1;
+
+  return {
+    eyebrow: isFinalSlide ? 'Переход в мастерскую' : 'Мостик к миссии',
+    title: mission?.title ?? module.practice.title,
+    action: firstStep?.instruction ?? fallbackAction,
+    artifact: mission?.artifact ?? module.practice.expectedOutput ?? 'артефакт недели',
+    meta: mission ? `${mission.durationMinutes} мин · ${mission.successCriteria.length} критерия` : `${module.practice.durationMinutes} мин`,
+    cta: isFinalSlide ? 'Начать мастерскую' : 'Открыть миссию',
+    isFinalSlide,
+  };
+};
+
 interface SlideDeckProps {
   modules: CourseModule[];
   selectedWeekId: number;
@@ -68,9 +94,20 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   const [aiFocusLine, setAiFocusLine] = useState<number | null>(null);
 
   const activeModule = modules.find((m) => m.id === selectedWeekId) || modules[0];
-  const activeSlide = activeModule.slides[currentSlideIndex] || activeModule.slides[0];
-  const progress = ((currentSlideIndex + 1) / activeModule.slides.length) * 100;
-  const slideAction = getSlideAction(selectedWeekId, activeSlide.type);
+  const slideCount = activeModule?.slides.length ?? 0;
+  const safeSlideIndex = slideCount > 0 ? Math.min(currentSlideIndex, slideCount - 1) : 0;
+  const activeSlide = activeModule?.slides[safeSlideIndex] ?? null;
+  const progress = slideCount > 0 ? ((safeSlideIndex + 1) / slideCount) * 100 : 0;
+  const slideAction = activeSlide ? getSlideAction(selectedWeekId, activeSlide.type) : '';
+  const practiceBridge =
+    activeModule && activeSlide ? getPracticeBridge(activeModule, safeSlideIndex, slideCount, slideAction) : null;
+
+  useEffect(() => {
+    if (slideCount > 0 && currentSlideIndex > slideCount - 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCurrentSlideIndex(0);
+    }
+  }, [currentSlideIndex, selectedWeekId, slideCount]);
 
   // Сброс ИИ-панели при смене слайда/недели
   useEffect(() => {
@@ -81,7 +118,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   }, [currentSlideIndex, selectedWeekId]);
 
   const askAi = async (focusLine?: { number: number; text: string }) => {
-    if (aiLoading) return;
+    if (aiLoading || !activeSlide) return;
     setAiLoading(true);
     setAiFocusLine(focusLine?.number ?? null);
     try {
@@ -103,6 +140,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   };
 
   const handleCodeLineClick = (line: number) => {
+    if (!activeSlide) return;
     const text = (activeSlide.codeSnippet || '').split('\n')[line - 1] ?? '';
     if (!text.trim()) return;
     void askAi({ number: line, text });
@@ -117,11 +155,11 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   };
 
   const handleNext = useCallback(() => {
-    if (currentSlideIndex < activeModule.slides.length - 1) {
+    if (currentSlideIndex < slideCount - 1) {
       triggerAnim('next');
       setTimeout(() => setCurrentSlideIndex((i) => i + 1), 180);
     }
-  }, [currentSlideIndex, activeModule.slides.length]);
+  }, [currentSlideIndex, slideCount]);
 
   const handlePrev = useCallback(() => {
     if (currentSlideIndex > 0) {
@@ -131,6 +169,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   }, [currentSlideIndex]);
 
   const handleDotClick = (idx: number) => {
+    if (idx === currentSlideIndex) return;
     triggerAnim(idx > currentSlideIndex ? 'next' : 'prev');
     setTimeout(() => setCurrentSlideIndex(idx), 180);
   };
@@ -152,6 +191,30 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [handleNext, handlePrev]);
+
+  if (!activeModule || !activeSlide) {
+    return (
+      <section className="slides-section">
+        <div className="slide-deck-container glass-panel slide-deck-empty" aria-live="polite">
+          <div className="slide-progress-track">
+            <div className="slide-progress-fill" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="slide-empty-state">
+            <div className="slide-empty-mark skeleton" aria-hidden="true" />
+            <div className="slide-empty-copy">
+              <span className="slide-empty-eyebrow">Слайды курса</span>
+              <h2>{modules.length ? 'В этой неделе пока нет слайдов' : 'Загружаем материалы курса'}</h2>
+              <p>
+                {modules.length
+                  ? 'Перейдите к другой неделе или вернитесь чуть позже.'
+                  : 'Собираем структуру недели, практику и quiz. Экран появится автоматически.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="slides-section">
@@ -177,13 +240,13 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
         {/* Slide Header */}
         <div className="slide-header">
           <div className="slide-stage-mark" aria-hidden="true">
-            {String(currentSlideIndex + 1).padStart(2, '0')}
+            {String(safeSlideIndex + 1).padStart(2, '0')}
           </div>
           <div className="slide-header-copy">
             <div className="slide-meta">
               <span className="slide-module-title">{activeModule.title}</span>
               <span className="slide-counter">
-                {currentSlideIndex + 1} / {activeModule.slides.length}
+                {safeSlideIndex + 1} / {slideCount}
               </span>
             </div>
             <h2 className="slide-title">
@@ -193,17 +256,25 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
           </div>
         </div>
 
-        <div className="slide-action-strip">
-          <div className="slide-action-copy">
-            <span>
-              <Target size={14} /> Микро-действие
-            </span>
-            <p>{slideAction}</p>
+        {practiceBridge && (
+          <div className={`slide-practice-bridge ${practiceBridge.isFinalSlide ? 'final' : ''}`}>
+            <div className="slide-practice-copy">
+              <span>
+                <Target size={14} /> {practiceBridge.eyebrow}
+              </span>
+              <strong>{practiceBridge.title}</strong>
+              <p>{practiceBridge.action}</p>
+            </div>
+            <div className="slide-practice-artifact">
+              <small>Артефакт</small>
+              <strong>{practiceBridge.artifact}</strong>
+              <span>{practiceBridge.meta}</span>
+            </div>
+            <button type="button" className="slide-action-cta" onClick={goToPractice}>
+              {practiceBridge.cta} <ArrowRight size={14} />
+            </button>
           </div>
-          <button type="button" className="slide-action-cta" onClick={goToPractice}>
-            Задание недели <ArrowRight size={14} />
-          </button>
-        </div>
+        )}
 
         {/* Slide Body with animation */}
         <div className={`slide-body ${animClass}`} key={`${selectedWeekId}-${currentSlideIndex}`}>
@@ -426,17 +497,17 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
                 type="button"
                 onClick={() => handleDotClick(idx)}
                 aria-label={`Открыть слайд ${idx + 1}`}
-                className={`slide-dot ${idx === currentSlideIndex ? 'active' : ''}`}
+                className={`slide-dot ${idx === safeSlideIndex ? 'active' : ''}`}
               />
             ))}
           </div>
 
-          {currentSlideIndex === activeModule.slides.length - 1 ? (
+          {safeSlideIndex === slideCount - 1 ? (
             <button
               onClick={goToPractice}
               className="btn btn-primary slide-nav-btn"
             >
-              Открыть задание недели <ArrowRight size={16} />
+              Открыть миссию недели <ArrowRight size={16} />
             </button>
           ) : (
             <button
