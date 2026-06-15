@@ -46,6 +46,21 @@ const getSlideAction = (weekId: number, slideType: CourseModule['slides'][number
   return weekActions[weekId] ?? 'Сформулируйте один следующий шаг для вашего MVP.';
 };
 
+const getSlideTypeLabel = (slideType: CourseModule['slides'][number]['type']) => {
+  const labels: Record<CourseModule['slides'][number]['type'], string> = {
+    text: 'Концепт',
+    compare: 'Сравнение',
+    code: 'Код',
+    diagram: 'Схема',
+    checklist: 'Чеклист',
+    tips: 'Подсказки',
+    keypoints: 'Ключевые мысли',
+    interactive: 'Интерактив',
+  };
+
+  return labels[slideType];
+};
+
 const getPracticeBridge = (
   module: CourseModule,
   slideIndex: number,
@@ -64,7 +79,7 @@ const getPracticeBridge = (
   return {
     eyebrow: isFinalSlide ? 'Переход в мастерскую' : 'Мостик к миссии',
     title: mission?.title ?? module.practice.title,
-    action: firstStep?.instruction ?? fallbackAction,
+    action: isFinalSlide ? firstStep?.instruction ?? fallbackAction : fallbackAction,
     artifact: mission?.artifact ?? module.practice.expectedOutput ?? 'артефакт недели',
     meta: mission ? `${mission.durationMinutes} мин · ${mission.successCriteria.length} критерия` : `${module.practice.durationMinutes} мин`,
     cta: isFinalSlide ? 'Начать мастерскую' : 'Открыть миссию',
@@ -99,6 +114,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
   const activeSlide = activeModule?.slides[safeSlideIndex] ?? null;
   const progress = slideCount > 0 ? ((safeSlideIndex + 1) / slideCount) * 100 : 0;
   const slideAction = activeSlide ? getSlideAction(selectedWeekId, activeSlide.type) : '';
+  const slideTypeLabel = activeSlide ? getSlideTypeLabel(activeSlide.type) : '';
   const practiceBridge =
     activeModule && activeSlide ? getPracticeBridge(activeModule, safeSlideIndex, slideCount, slideAction) : null;
 
@@ -185,6 +201,8 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
       if (e.key === 'ArrowRight') handleNext();
       if (e.key === 'ArrowLeft') handlePrev();
     };
@@ -225,6 +243,7 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
             key={m.id}
             onClick={() => handleWeekChange(m.id)}
             className={`week-tab-btn ${m.id === selectedWeekId ? 'active' : ''}`}
+            aria-current={m.id === selectedWeekId ? 'page' : undefined}
           >
             Неделя {m.id}
           </button>
@@ -233,7 +252,14 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
 
       <div className="slide-deck-container glass-panel">
         {/* Progress Bar */}
-        <div className="slide-progress-track">
+        <div
+          className="slide-progress-track"
+          role="progressbar"
+          aria-label="Прогресс презентации"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
           <div className="slide-progress-fill" style={{ width: `${progress}%` }} />
         </div>
 
@@ -244,7 +270,10 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
           </div>
           <div className="slide-header-copy">
             <div className="slide-meta">
-              <span className="slide-module-title">{activeModule.title}</span>
+              <span className="slide-meta-group">
+                <span className="slide-module-title">{activeModule.title}</span>
+                <span className={`slide-type-pill type-${activeSlide.type}`}>{slideTypeLabel}</span>
+              </span>
               <span className="slide-counter">
                 {safeSlideIndex + 1} / {slideCount}
               </span>
@@ -256,182 +285,187 @@ export const SlideDeck: React.FC<SlideDeckProps> = ({
           </div>
         </div>
 
-        {practiceBridge && (
-          <div className={`slide-practice-bridge ${practiceBridge.isFinalSlide ? 'final' : ''}`}>
-            <div className="slide-practice-copy">
-              <span>
-                <Target size={14} /> {practiceBridge.eyebrow}
-              </span>
-              <strong>{practiceBridge.title}</strong>
-              <p>{practiceBridge.action}</p>
-            </div>
-            <div className="slide-practice-artifact">
-              <small>Артефакт</small>
-              <strong>{practiceBridge.artifact}</strong>
-              <span>{practiceBridge.meta}</span>
-            </div>
-            <button type="button" className="slide-action-cta" onClick={goToPractice}>
-              {practiceBridge.cta} <ArrowRight size={14} />
-            </button>
+        <div className="slide-workspace">
+          {/* Slide Body with animation */}
+          <div className={`slide-body ${animClass}`} key={`${selectedWeekId}-${currentSlideIndex}`}>
+            {/* ── IMAGE SUPPORT ── */}
+            {activeSlide.imageUrl && (
+              <div className="slide-image-wrapper glass-panel glow-border-cyan">
+                <img src={activeSlide.imageUrl} alt={activeSlide.imageCaption || activeSlide.title} className="slide-image" />
+                {activeSlide.imageCaption && <span className="slide-image-caption">{activeSlide.imageCaption}</span>}
+              </div>
+            )}
+
+            {/* ── TEXT ── */}
+            {activeSlide.type === 'text' && (
+              <div className="slide-content text-content">
+                <p>{activeSlide.content}</p>
+              </div>
+            )}
+
+            {/* ── COMPARE ── */}
+            {activeSlide.type === 'compare' && (
+              <div className="slide-content compare-content">
+                <p className="compare-intro">{activeSlide.content}</p>
+                <div className="compare-grid">
+                  <div className="compare-panel bad glass-panel">
+                    <div className="compare-panel-header">
+                      <AlertTriangle size={16} className="panel-icon bad" />
+                      <span>❌ Плохой запрос</span>
+                    </div>
+                    <pre className="compare-prompt-text">{activeSlide.badPrompt}</pre>
+                  </div>
+                  <div className="compare-panel good glass-panel">
+                    <div className="compare-panel-header">
+                      <CheckCircle size={16} className="panel-icon good" />
+                      <span>✅ Правильный запрос</span>
+                    </div>
+                    <pre className="compare-prompt-text">{activeSlide.goodPrompt}</pre>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── CODE ── */}
+            {activeSlide.type === 'code' && (
+              <div className="slide-content code-content-wrapper">
+                <p className="compare-intro">{activeSlide.content}</p>
+                {activeSlide.codeSnippet && (
+                  <>
+                    <CodeHighlight
+                      code={activeSlide.codeSnippet}
+                      language={activeSlide.codeLanguage}
+                      highlightLine={aiFocusLine}
+                      onLineClick={handleCodeLineClick}
+                    />
+                    <p className="ai-line-hint">
+                      <Sparkles size={12} /> Кликните по строке кода — ИИ объяснит, что она делает
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── DIAGRAM ── */}
+            {activeSlide.type === 'diagram' && (
+              <div className="slide-content diagram-content">
+                <p className="compare-intro">{activeSlide.content}</p>
+                {activeSlide.diagramSteps && (
+                  <div className="diagram-flow">
+                    {activeSlide.diagramSteps.map((step, idx) => (
+                      <React.Fragment key={idx}>
+                        <div
+                          className="diagram-step"
+                          style={{ '--step-color': step.color || 'var(--accent-primary)' } as React.CSSProperties}
+                        >
+                          <div className="diagram-step-icon">{step.icon}</div>
+                          <div className="diagram-step-body">
+                            <strong>{step.label}</strong>
+                            <span>{step.desc}</span>
+                          </div>
+                        </div>
+                        {idx < (activeSlide.diagramSteps?.length ?? 0) - 1 && (
+                          <div className="diagram-arrow">
+                            <ArrowRight size={18} />
+                          </div>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── CHECKLIST ── */}
+            {activeSlide.type === 'checklist' && (
+              <div className="slide-content checklist-content">
+                <p className="compare-intro">{activeSlide.content}</p>
+                {activeSlide.items && (
+                  <ul className="slide-checklist">
+                    {activeSlide.items.map((item, idx) => (
+                      <li key={idx} className="slide-checklist-item" style={{ animationDelay: `${idx * 80}ms` }}>
+                        <CheckCircle size={16} className="check-icon" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* ── TIPS ── */}
+            {activeSlide.type === 'tips' && (
+              <div className="slide-content tips-content">
+                <p className="compare-intro">{activeSlide.content}</p>
+                {activeSlide.tipsList && (
+                  <div className="tips-grid">
+                    {activeSlide.tipsList.map((tip, idx) => (
+                      <div key={idx} className="tip-card" style={{ animationDelay: `${idx * 80}ms` }}>
+                        <Lightbulb size={16} className="tip-icon" />
+                        <p>{tip}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── KEYPOINTS ── */}
+            {activeSlide.type === 'keypoints' && (
+              <div className="slide-content keypoints-content">
+                <p className="compare-intro">{activeSlide.content}</p>
+                {activeSlide.keyPointsList && (
+                  <div className="keypoints-grid">
+                    {activeSlide.keyPointsList.map((kp, idx) => (
+                      <div key={idx} className="keypoint-card" style={{ animationDelay: `${idx * 80}ms` }}>
+                        <div className="keypoint-emoji">{kp.emoji}</div>
+                        <div className="keypoint-body">
+                          <strong>{kp.title}</strong>
+                          <span>{kp.desc}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── INTERACTIVE ── */}
+            {activeSlide.type === 'interactive' && (
+              <div className="slide-content interactive-content">
+                <p>{activeSlide.content}</p>
+                <div className="interactive-teaser glass-panel glow-border-cyan">
+                  <BookOpen size={36} className="teaser-icon" />
+                  <h3>Готовы применить знания?</h3>
+                  <p>Этот модуль содержит практику для закрепления материала.</p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Slide Body with animation */}
-        <div className={`slide-body ${animClass}`} key={`${selectedWeekId}-${currentSlideIndex}`}>
-
-
-          {/* ── IMAGE SUPPORT ── */}
-          {activeSlide.imageUrl && (
-            <div className="slide-image-wrapper glass-panel glow-border-cyan">
-              <img src={activeSlide.imageUrl} alt={activeSlide.imageCaption || activeSlide.title} className="slide-image" />
-              {activeSlide.imageCaption && <span className="slide-image-caption">{activeSlide.imageCaption}</span>}
-            </div>
-          )}
-
-          {/* ── TEXT ── */}
-          {activeSlide.type === 'text' && (
-            <div className="slide-content text-content">
-              <p>{activeSlide.content}</p>
-            </div>
-          )}
-
-          {/* ── COMPARE ── */}
-          {activeSlide.type === 'compare' && (
-            <div className="slide-content compare-content">
-              <p className="compare-intro">{activeSlide.content}</p>
-              <div className="compare-grid">
-                <div className="compare-panel bad glass-panel">
-                  <div className="compare-panel-header">
-                    <AlertTriangle size={16} className="panel-icon bad" />
-                    <span>❌ Плохой запрос</span>
-                  </div>
-                  <pre className="compare-prompt-text">{activeSlide.badPrompt}</pre>
-                </div>
-                <div className="compare-panel good glass-panel">
-                  <div className="compare-panel-header">
-                    <CheckCircle size={16} className="panel-icon good" />
-                    <span>✅ Правильный запрос</span>
-                  </div>
-                  <pre className="compare-prompt-text">{activeSlide.goodPrompt}</pre>
-                </div>
+          {practiceBridge && (
+            <aside className={`slide-context-rail ${practiceBridge.isFinalSlide ? 'final' : ''}`}>
+              <div className="slide-quick-action">
+                <span className="slide-rail-label">
+                  <Sparkles size={13} /> Сделать сейчас
+                </span>
+                <p>{slideAction}</p>
               </div>
-            </div>
-          )}
-
-          {/* ── CODE ── */}
-          {activeSlide.type === 'code' && (
-            <div className="slide-content code-content-wrapper">
-              <p className="compare-intro">{activeSlide.content}</p>
-              {activeSlide.codeSnippet && (
-                <>
-                  <CodeHighlight
-                    code={activeSlide.codeSnippet}
-                    language={activeSlide.codeLanguage}
-                    highlightLine={aiFocusLine}
-                    onLineClick={handleCodeLineClick}
-                  />
-                  <p className="ai-line-hint">
-                    <Sparkles size={12} /> Кликните по строке кода — ИИ объяснит, что она делает
-                  </p>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* ── DIAGRAM ── */}
-          {activeSlide.type === 'diagram' && (
-            <div className="slide-content diagram-content">
-              <p className="compare-intro">{activeSlide.content}</p>
-              {activeSlide.diagramSteps && (
-                <div className="diagram-flow">
-                  {activeSlide.diagramSteps.map((step, idx) => (
-                    <React.Fragment key={idx}>
-                      <div
-                        className="diagram-step"
-                        style={{ '--step-color': step.color || 'var(--accent-primary)' } as React.CSSProperties}
-                      >
-                        <div className="diagram-step-icon">{step.icon}</div>
-                        <div className="diagram-step-body">
-                          <strong>{step.label}</strong>
-                          <span>{step.desc}</span>
-                        </div>
-                      </div>
-                      {idx < (activeSlide.diagramSteps?.length ?? 0) - 1 && (
-                        <div className="diagram-arrow">
-                          <ArrowRight size={18} />
-                        </div>
-                      )}
-                    </React.Fragment>
-                  ))}
+              <div className="slide-mission-card">
+                <span className="slide-rail-label">
+                  <Target size={13} /> {practiceBridge.eyebrow}
+                </span>
+                <strong>{practiceBridge.title}</strong>
+                <div className="slide-rail-artifact">
+                  <small>Артефакт</small>
+                  <span>{practiceBridge.artifact}</span>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* ── CHECKLIST ── */}
-          {activeSlide.type === 'checklist' && (
-            <div className="slide-content checklist-content">
-              <p className="compare-intro">{activeSlide.content}</p>
-              {activeSlide.items && (
-                <ul className="slide-checklist">
-                  {activeSlide.items.map((item, idx) => (
-                    <li key={idx} className="slide-checklist-item" style={{ animationDelay: `${idx * 80}ms` }}>
-                      <CheckCircle size={16} className="check-icon" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
-          {/* ── TIPS ── */}
-          {activeSlide.type === 'tips' && (
-            <div className="slide-content tips-content">
-              <p className="compare-intro">{activeSlide.content}</p>
-              {activeSlide.tipsList && (
-                <div className="tips-grid">
-                  {activeSlide.tipsList.map((tip, idx) => (
-                    <div key={idx} className="tip-card" style={{ animationDelay: `${idx * 80}ms` }}>
-                      <Lightbulb size={16} className="tip-icon" />
-                      <p>{tip}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── KEYPOINTS ── */}
-          {activeSlide.type === 'keypoints' && (
-            <div className="slide-content keypoints-content">
-              <p className="compare-intro">{activeSlide.content}</p>
-              {activeSlide.keyPointsList && (
-                <div className="keypoints-grid">
-                  {activeSlide.keyPointsList.map((kp, idx) => (
-                    <div key={idx} className="keypoint-card" style={{ animationDelay: `${idx * 80}ms` }}>
-                      <div className="keypoint-emoji">{kp.emoji}</div>
-                      <div className="keypoint-body">
-                        <strong>{kp.title}</strong>
-                        <span>{kp.desc}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── INTERACTIVE ── */}
-          {activeSlide.type === 'interactive' && (
-            <div className="slide-content interactive-content">
-              <p>{activeSlide.content}</p>
-              <div className="interactive-teaser glass-panel glow-border-cyan">
-                <BookOpen size={36} className="teaser-icon" />
-                <h3>Готовы применить знания?</h3>
-                <p>Этот модуль содержит практику для закрепления материала.</p>
+                <p className="slide-rail-meta">{practiceBridge.meta}</p>
+                <button type="button" className="slide-action-cta" onClick={goToPractice}>
+                  {practiceBridge.cta} <ArrowRight size={14} />
+                </button>
               </div>
-            </div>
+            </aside>
           )}
         </div>
 

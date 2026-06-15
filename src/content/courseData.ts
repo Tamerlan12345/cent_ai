@@ -437,19 +437,19 @@ export const courseModules: CourseModule[] = [
     ],
     practice: {
       id: 'p1',
-      title: 'Мастерская 1: Идея, AI-наставник и промпт-линза',
+      title: 'Мастерская 1: Личный AI-штаб и вау-идея MVP',
       type: 'prompt',
       mode: 'mission',
       durationMinutes: 45,
-      description: 'Не пишем код и не прыгаем в инструменты. Собираем три маленьких артефакта: сильный запрос, brief личного AI-наставника и media prompt. Цель — уйти с ясной идеей MVP, болью пользователя и языком, на котором ИИ вас понимает.',
+      description: 'Не сидим внутри курса. Студент выходит в ChatGPT GPTs или Gemini Gems, создаёт личного MVP-наставника, прогоняет идею через 10 вопросов, затем делает визуальный вау-тест в генераторе изображений. В курс возвращается не с теорией, а с ассистентом, вердиктом по идее и первым визуальным образом.',
       steps: [
-        'Почините слабый запрос: кто пользователь, какая боль, какой результат нужен.',
-        'Соберите brief личного AI-наставника: он задаёт вопросы, а не делает проект за вас.',
-        'Сформулируйте визуальный media prompt, чтобы быстро проверить характер идеи.',
-        'Зафиксируйте итог: одна идея, один пользователь, один сценарий, одна ноу-хау фишка.',
-        'Только после этого переносите идею во внешний чат или Gem/GPT.',
+        'Соберите инструкцию для персонального GPT/Gem-наставника по MVP.',
+        'Откройте ChatGPT GPTs или Gemini Gems и создайте там своего ассистента.',
+        'Попросите ассистента провести 10-вопросное интервью и выбрать самую сильную идею.',
+        'Сделайте внешний визуальный тест: обложка/первый экран MVP через генератор изображения.',
+        'Верните в курс ссылку/скрин ассистента, вердикт по идее и media prompt.',
       ],
-      expectedOutput: 'Starter Canvas: сильный prompt, AI-наставник, media prompt и выбранная идея MVP.',
+      expectedOutput: 'AI-штаб студента: GPT/Gem-наставник, idea verdict, starter Canvas и визуальный prompt.',
       initialPrompt: { goal: '', context: '', constraints: '', dod: '' },
       hints: [],
       checklist: [],
@@ -457,99 +457,100 @@ export const courseModules: CourseModule[] = [
       missions: [
         {
           id: 'm1-1',
-          title: 'Миссия 1. Промпт-линза: из тумана в задачу',
+          title: 'Миссия 1. Создай личного GPT/Gem-наставника',
           type: 'prompt-fix',
           durationMinutes: 10,
-          intro: 'Берём типичный запрос "сделай красиво" и превращаем его в управляемую задачу для ИИ. После миссии у вас будет шаблон, который можно использовать в любом проекте.',
-          artifact: 'strong-prompt.md',
+          intro: 'Вместо очередного промпта создаём внешний AI-инструмент, который будет сопровождать студента весь курс. Можно выбрать ChatGPT GPTs или Gemini Gems. Важно: наставник не пишет проект за ученика, а задаёт вопросы, режет scope и возвращает следующий маленький шаг.',
+          artifact: 'my-mvp-coach-link-or-screenshot',
           successCriteria: [
-            'Goal описывает боль пользователя и результат',
-            'Context объясняет, кто вы и какой MVP собираете',
-            'Constraints ограничивает стек и объём',
-            'DoD измерим: понятно, как проверить ответ ИИ'
+            'Persona описывает роль MVP-наставника для новичка',
+            'Task требует задавать вопросы и улучшать Canvas',
+            'Context объясняет 4-недельный курс, Antigravity и стек HTML/CSS/JS',
+            'Format ограничивает ответ: 3 шага и один вопрос в конце',
+            'DoD требует ссылку/скрин созданного GPT или Gem'
           ],
           starterFiles: { html: '', css: '', js: '' },
           steps: [
             {
               id: 's1',
-              title: 'Разобрать мутный запрос',
+              title: 'Инструкция для внешнего ассистента',
               target: 'prompt',
-              instruction: 'Заполните Goal, Context, Constraints и DoD так, будто объясняете задачу умному помощнику, который ничего не знает о вашей сфере.',
-              checkIds: ['check-goal', 'check-context', 'check-constraints', 'check-dod'],
-              hints: ['Начните с пользователя: "для менеджера", "для мастера", "для учителя".', 'В Context напишите: "я новичок, MVP за 4 недели, HTML/CSS/JS".', 'В Constraints запретите лишнее: backend, авторизацию, фреймворки, внешние API.'],
-              doneText: 'Промпт стал задачей, а не пожеланием. Его уже можно нести AI-наставнику.'
+              instruction: 'Заполните поля так, чтобы из них можно было создать Custom GPT или Gemini Gem. После проверки откройте внешний сервис, создайте ассистента, протестируйте 2 стартовых вопроса и сохраните ссылку или скрин.',
+              checkIds: ['check-brief'],
+              hints: ['Goal: создать персонального MVP-коуча, который не пишет всё за ученика.', 'Context: вы новичок, курс 4 недели, цель — один MVP без backend.', 'DoD: ассистент задаёт 10 вопросов, режет scope и возвращает Canvas в Markdown.'],
+              doneText: 'Инструкция готова. Теперь её нужно реально вставить в GPT builder или Gemini Gems и протестировать.'
             }
           ],
           checks: [
-            { id: 'check-goal', label: 'Наличие Goal', kind: 'functional', required: true, failHint: 'Поле Goal не должно быть пустым или слишком коротким.' },
-            { id: 'check-context', label: 'Наличие Context', kind: 'functional', required: true, failHint: 'Context не должен быть пустым.' },
-            { id: 'check-constraints', label: 'Наличие Constraints', kind: 'functional', required: true, failHint: 'Constraints не должны быть пустыми.' },
-            { id: 'check-dod', label: 'Наличие DoD', kind: 'functional', required: true, failHint: 'DoD не должен быть пустым.' }
+            { id: 'check-brief', label: 'Инструкция для GPT/Gem собрана', kind: 'functional', required: true, failHint: 'Добавьте Persona / Task / Context / Format и правило: ассистент сначала задаёт вопросы.' }
           ],
           agentInstructions: [],
-          unlockText: 'Промпт-линза готова.'
+          unlockText: 'AI-наставник готов. Следующий шаг — заставить его не хвалить идею, а проверить её на реальность.'
         },
         {
           id: 'm1-2',
-          title: 'Миссия 2. Личный AI-наставник для MVP',
+          title: 'Миссия 2. Интервью "10 ударов по идее"',
           type: 'ai-helper-brief',
           durationMinutes: 15,
-          intro: 'Создайте инструкцию для Gemini Gem или Custom GPT, который держит вас в фокусе: задаёт вопросы, режет лишнее и объясняет следующий маленький шаг.',
-          artifact: 'ai-mentor-brief.md',
+          intro: 'Теперь используем созданного GPT/Gem как настоящего коуча. Он должен не соглашаться со всем, а выбить слабые места идеи: кому нужно, за что человек будет благодарен, почему это можно собрать за 4 недели.',
+          artifact: 'idea-verdict.md',
           successCriteria: [
-            'Указана Persona: терпеливый наставник по MVP для новичка',
-            'Указана Task: задавать вопросы, улучшать Canvas и проверять промпты',
-            'Указан Context: проект за 4 недели, Antigravity, HTML/CSS/JS + LocalStorage',
-            'Указан Format: короткий ответ, 3 шага, один вопрос в конце',
-            'Запрещено писать финальный код за студента без объяснения'
+            'Ассистент задаёт 10 вопросов по идее',
+            'В ответе есть оценка: стоит делать / сузить / заменить',
+            'Выбран один пользователь и один сценарий',
+            'Есть одна ноу-хау фишка без внешнего API',
+            'Вердикт можно вставить в starter Canvas'
           ],
           starterFiles: { html: '', css: '', js: '' },
           steps: [
             {
               id: 's2',
-              title: 'Собрать роль наставника',
+              title: 'Провести жёсткое интервью',
               target: 'prompt',
-              instruction: 'Опишите AI-наставника по формуле Persona / Task / Context / Format. Добавьте правило: сначала вопросы и объяснение, потом код.',
-              checkIds: ['check-brief'],
-              hints: ['Persona: терпеливый продакт-коуч для новичка.', 'Task: задаёт вопросы, улучшает Canvas, проверяет промпты.', 'Format: 3 коротких шага + один вопрос в конце, без лекции.'],
-              doneText: 'Теперь у вас есть не чат "на всё", а наставник с рамкой и поведением.'
+              instruction: 'Попросите своего внешнего GPT/Gem провести 10-вопросное интервью по вашей идее, затем вернуть verdict: боль, пользователь, первый сценарий, что убрать, вау-фишка без API.',
+              checkIds: ['check-brief-role', 'check-brief-scenario', 'check-no-how-hook'],
+              hints: ['Попросите ассистента быть строгим, а не поддерживающим.', 'Обязательный формат: 10 вопросов → вердикт → Canvas v0.1.', 'Ноу-хау фишка должна быть маленькой: риск-скоринг, приоритет, подсказка, сравнение.'],
+              doneText: 'Идея прошла стресс-тест. Теперь она звучит как MVP, а не как мечта на 20 функций.'
             }
           ],
           checks: [
-            { id: 'check-brief', label: 'Инструкция заполнена', kind: 'functional', required: true, failHint: 'Промпт не должен быть пустым.' }
+            { id: 'check-brief-role', label: 'Роль внешнего коуча задана', kind: 'functional', required: true, failHint: 'Укажите, что GPT/Gem действует как строгий продакт-коуч или MVP-наставник.' },
+            { id: 'check-brief-scenario', label: 'Сценарий пользователя запрошен', kind: 'functional', required: true, failHint: 'Попросите ассистента выбрать один сценарий пользователя.' },
+            { id: 'check-no-how-hook', label: 'Ноу-хау фишка без API', kind: 'functional', required: true, failHint: 'Добавьте требование найти одну фишку без внешнего API.' }
           ],
           agentInstructions: [],
-          unlockText: 'AI-наставник готов к первой консультации.'
+          unlockText: 'Вердикт получен. Теперь идею можно показать визуально.'
         },
         {
           id: 'm1-3',
-          title: 'Миссия 3. Визуальный тест идеи',
+          title: 'Миссия 3. Вау-обложка: покажи идею без слов',
           type: 'ai-media-prompt',
           durationMinutes: 10,
-          intro: 'Проверяем идею через картинку: если вы не можете описать экран или настроение продукта, MVP ещё мутный. Это быстрый тест ясности, а не дизайн ради дизайна.',
-          artifact: 'media-prompt.md',
+          intro: 'Идея должна быстро считываться глазами. Студент генерирует обложку или первый экран MVP в ChatGPT Images, Gemini, AI Studio или другом генераторе, затем просит AI-наставника раскритиковать: понятно ли, для кого продукт.',
+          artifact: 'vision-board.png + critique.md',
           successCriteria: [
-            'Описан стиль',
-            'Описаны ключевые объекты',
-            'Указано отсутствие текста на изображении'
+            'Описан стиль и аудитория',
+            'Описаны ключевые объекты первого экрана',
+            'Указано отсутствие текста на изображении',
+            'Есть критика результата: что понятно, что выглядит фальшиво'
           ],
           starterFiles: { html: '', css: '', js: '' },
           steps: [
             {
               id: 's3',
-              title: 'Образ первого экрана',
+              title: 'Сгенерировать и раскритиковать',
               target: 'prompt',
-              instruction: 'Напишите промпт для визуального образа MVP: кто пользователь, какой экран виден, какие 2-3 объекта важны, какой стиль подходит вашей сфере.',
+              instruction: 'Напишите prompt для генерации обложки/первого экрана MVP. Сгенерируйте 1-2 варианта во внешнем инструменте, затем попросите AI-наставника дать критику по ясности идеи.',
               checkIds: ['check-media'],
-              hints: ['Укажите стиль: реалистично, flat illustration, 3D, рабочий интерфейс.', 'Назовите конкретные объекты: форма, карточка, список, человек, панель.', 'Попросите не добавлять текст на изображение.'],
-              doneText: 'Идея получила визуальную форму. Теперь её легче объяснить себе, группе и AI-наставнику.'
+              hints: ['Укажите стиль: рабочий интерфейс, реалистичный mockup, flat/3D — под вашу сферу.', 'Назовите 2-3 объекта: форма заявки, карточка клиента, список задач, панель оценки.', 'Запретите текст на картинке и попросите отдельную критику результата.'],
+              doneText: 'Идея получила визуальный крючок. Теперь её можно показать группе за 10 секунд.'
             }
           ],
           checks: [
             { id: 'check-media', label: 'Заполнение промпта', kind: 'functional', required: true, failHint: 'Заполните поля визуального описания.' }
           ],
           agentInstructions: [],
-          unlockText: 'Визуальный тест идеи пройден.'
+          unlockText: 'Вау-обложка готова. Первый внешний артефакт курса уже есть.'
         }
       ]
     },
@@ -1100,19 +1101,19 @@ build/
     ],
     practice: {
       id: 'p2',
-      title: 'Мастерская 2: Первый экран и контракт для агента',
+      title: 'Мастерская 2: Внешний прототип и handoff в Antigravity',
       type: 'prompt',
       mode: 'mission',
-      durationMinutes: 60,
-      description: 'Берём идею из первой недели и превращаем её в понятный контракт для агента: что строим, что не строим, какой первый экран нужен и по каким правилам агент должен работать.',
+      durationMinutes: 75,
+      description: 'Не пишем документы в пустоту. Студент сначала делает грубый внешний прототип в Google AI Studio Build mode или Lovable, затем проводит autopsy: что сервис угадал, что наврал, что можно забрать в реальный MVP. После этого собирает handoff-пакет для Antigravity.',
       steps: [
-        'Срежьте лишние функции до одного первого сценария.',
-        'Опишите первый экран как карту: блоки, поля, кнопки, статусы и ошибки.',
-        'Соберите AGENTS.md, чтобы агент работал маленькими diff и не добавлял лишнее.',
-        'Проверьте, что любой человек может понять проект по brief без устного объяснения.',
-        'Только после этого открывайте Antigravity и просите агента собрать структуру файлов.',
+        'Откройте Google AI Studio Build mode или Lovable и соберите черновой прототип из 1–2 экранов.',
+        'Сохраните ссылку или скриншоты: это не финальный продукт, а материал для разбора.',
+        'Попросите своего GPT/Gem-наставника сделать Prototype Autopsy: оставить, выкинуть, риск, перенос в MVP.',
+        'Соберите PROJECT_BRIEF.md, SCREEN_ELEMENT_MAP.md и AGENTS.md на основе autopsy, а не фантазии.',
+        'Передайте пакет в Antigravity как контракт: агент строит только согласованный первый сценарий.',
       ],
-      expectedOutput: 'PROJECT_BRIEF.md, SCREEN_ELEMENT_MAP.md и AGENTS.md для первого экрана MVP.',
+      expectedOutput: 'prototype-link/screens, PROTOTYPE_AUTOPSY.md, PROJECT_BRIEF.md, SCREEN_ELEMENT_MAP.md и AGENTS.md.',
       initialPrompt: { goal: '', context: '', constraints: '', dod: '' },
       hints: [],
       checklist: [],
@@ -1120,92 +1121,99 @@ build/
       missions: [
         {
           id: 'm2-1',
-          title: 'Миссия 1. Scope Cutter: оставить один сценарий',
+          title: 'Миссия 1. Prototype Duel: внешний черновик за 25 минут',
           type: 'mvp-scenario',
-          durationMinutes: 15,
-          intro: 'Самый частый провал новичка — пытаться собрать весь сервис сразу. Здесь вы режете идею до одного сценария, который реально собрать и проверить.',
-          artifact: 'PROJECT_BRIEF.md',
+          durationMinutes: 25,
+          intro: 'Выход из курса в реальный инструмент. Нужно не «сделать красиво», а быстро столкнуть идею с внешним prompt-to-app сервисом и увидеть, где он усиливает мысль, а где начинает додумывать лишнее.',
+          artifact: 'prototype-link-or-screens',
           successCriteria: [
-            'Указана только 1 ключевая роль пользователя',
-            'Описан 1 главный сценарий',
-            'В списке "Не входит в MVP" минимум 3 пункта',
-            'Выбрана одна ноу-хау фишка без внешнего API'
+            'В промпте есть роль, пользователь и один главный сценарий',
+            'Прототип ограничен 1–2 экранами и не требует логина, платежей или реальных персональных данных',
+            'Указана одна ноу-хау фишка без внешнего API',
+            'Сохранена ссылка или 2 скриншота прототипа для разбора'
           ],
           starterFiles: { html: '', css: '', js: '' },
           steps: [
             {
               id: 's2-1',
-              title: 'Срезать лишнее без жалости',
+              title: 'Запустить внешний прототип',
               target: 'prompt',
-              instruction: 'Напишите промпт, чтобы ИИ помог отсечь лишнее из MVP Паспорта и выбрать один первый экран, где пользователь получает первый результат.',
+              instruction: 'Составьте промпт для Google AI Studio Build mode или Lovable: кто пользователь, какая боль, один сценарий, 1–2 экрана, запрет на авторизацию/оплату/реальные данные и одна ноу-хау фишка без API. После проверки реально откройте инструмент и соберите черновик.',
               checkIds: ['check-brief-role', 'check-brief-scenario', 'check-no-how-hook'],
-              hints: ['Дайте агенту роль "безжалостный продакт-менеджер".', 'Попросите вернуть список "оставить сейчас / не входит в MVP".', 'Ноу-хау фишка должна работать без внешнего API: приоритет, подсказка, риск-скоринг, сравнение.'],
-              doneText: 'Сценарий стал узким. Теперь агенту есть что строить, а не угадывать.'
+              hints: ['Формулируйте как задачу прототипирования, а не как просьбу «сделай приложение мечты».', 'Добавьте жёсткий лимит: только первый результат пользователя, без кабинетов и интеграций.', 'Ноу-хау фишка должна быть локальной: приоритет, подсказка, риск-скоринг, сравнение или умный статус.'],
+              doneText: 'Промпт готов. Теперь внешний сервис даст материал для разбора, а не заменит мышление.'
             }
           ],
           checks: [
-            { id: 'check-brief-role', label: 'Указание роли', kind: 'functional', required: true, failHint: 'Поле Goal или Context должно содержать цель создания краткого брифа (brief, mvp).' },
-            { id: 'check-brief-scenario', label: 'Ограничения MVP', kind: 'functional', required: true, failHint: 'Запретите агенту добавлять новый функционал в Constraints.' },
+            { id: 'check-brief-role', label: 'Роль и пользователь заданы', kind: 'functional', required: true, failHint: 'Укажите роль сервиса/ассистента и пользователя, для которого собирается прототип.' },
+            { id: 'check-brief-scenario', label: 'Один сценарий прототипа', kind: 'functional', required: true, failHint: 'Опишите один сценарий или последовательность шагов, а не весь будущий сервис.' },
             { id: 'check-no-how-hook', label: 'Ноу-хау фишка без API', kind: 'functional', required: true, failHint: 'Добавьте одну фишку, которая усиливает ценность, но работает без внешнего API.' }
           ],
           agentInstructions: [],
-          unlockText: 'Scope зафиксирован: можно проектировать экран.'
+          unlockText: 'Внешний прототип создан. Теперь его нужно разобрать, а не слепо копировать.'
         },
         {
           id: 'm2-2',
-          title: 'Миссия 2. Screen Map: карта первого экрана',
-          type: 'dom-event',
+          title: 'Миссия 2. Prototype Autopsy: что забрать, что выкинуть',
+          type: 'prompt-fix',
           durationMinutes: 20,
-          intro: 'До кода фиксируем экран словами. Это снижает магию: ученик понимает, какие элементы появятся, а агент не выдумывает интерфейс на ходу.',
-          artifact: 'SCREEN_ELEMENT_MAP.md',
+          intro: 'Prompt-to-app сервис часто даёт красивую оболочку и опасную иллюзию готовности. Здесь студент превращает вау-черновик в инженерный материал: отделяет полезные решения от мусора и фиксирует реальный первый экран.',
+          artifact: 'PROTOTYPE_AUTOPSY.md',
           successCriteria: [
-            'Описаны 3 главных блока (Header, Main, Footer)',
-            'Ключевая кнопка (Call to Action) имеет уникальный ID',
-            'Указано, где выводятся ошибки или статус'
+            'Есть таблица Keep / Kill / Risk / Transfer',
+            'Описан первый экран с блоками, кнопками, состояниями и ошибками',
+            'Выбрана одна фишка, которую реально перенести без внешнего API',
+            'Отмечено минимум 2 места, где внешний сервис додумал лишнее'
           ],
           starterFiles: { html: '', css: '', js: '' },
           steps: [
             {
               id: 's2-2',
-              title: 'Разложить экран на элементы',
+              title: 'Разобрать прототип без восторга',
               target: 'prompt',
-              instruction: 'Попросите агента создать SCREEN_ELEMENT_MAP.md: блоки, поля, кнопки, пустые состояния, ошибки, где виден результат и какие id нужны для JS.',
-              checkIds: ['check-screen-map'],
-              hints: ['Формат должен быть Markdown, не код.', 'Попросите id для кнопок, input и контейнера результата.', 'Запретите CSS/JS в этом шаге: нужна только карта экрана.'],
-              doneText: 'Экран стал картой. Теперь код будет следовать сценарию, а не фантазии агента.'
+              instruction: 'Дайте своему GPT/Gem ссылку или описание скриншотов прототипа и попросите сделать autopsy: Keep, Kill, Risk, Transfer. Затем попросите превратить Transfer в карту первого экрана: блоки, поля, кнопки, пустые состояния, ошибки и id для JS.',
+              checkIds: ['check-screen-map', 'check-no-how-hook'],
+              hints: ['Запретите комплименты: нужен разбор, а не похвала прототипу.', 'Попросите явно назвать, что внешний сервис придумал без основания.', 'Фишка должна перейти в vanilla HTML/CSS/JS без внешнего API.'],
+              doneText: 'Прототип разобран. Теперь у вас есть материал для осознанного handoff, а не просто красивый скрин.'
             }
           ],
           checks: [
-            { id: 'check-screen-map', label: 'Запрос карты элементов', kind: 'functional', required: true, failHint: 'В промпте нужно запросить структуру блоков или карту (screen map, dom).' }
+            { id: 'check-screen-map', label: 'Запрос карты экрана', kind: 'functional', required: true, failHint: 'Попросите структуру первого экрана, блоки, кнопки или screen map.' },
+            { id: 'check-no-how-hook', label: 'Переносимая фишка выбрана', kind: 'functional', required: true, failHint: 'Укажите, какую фишку переносим в MVP без внешнего API.' }
           ],
           agentInstructions: [],
-          unlockText: 'Screen Map готов: можно писать правила агенту.'
+          unlockText: 'Autopsy готова: можно собирать контракт для Antigravity.'
         },
         {
           id: 'm2-3',
-          title: 'Миссия 3. AGENTS.md: правила работы агента',
+          title: 'Миссия 3. Handoff Pack: контракт для Antigravity',
           type: 'prompt-fix',
-          durationMinutes: 15,
-          intro: 'Теперь создаём правила для Antigravity: как агент читает brief, что ему запрещено, как он делает маленькие изменения и когда должен остановиться.',
-          artifact: 'AGENTS.md',
+          durationMinutes: 25,
+          intro: 'Теперь внешний прототип превращается в рабочий пакет для агентной IDE. Antigravity должен получить не желание «сделай красиво», а конкретный контракт: brief, screen map, правила diff, запреты и Definition of Done.',
+          artifact: 'PROJECT_BRIEF.md + SCREEN_ELEMENT_MAP.md + AGENTS.md',
           successCriteria: [
-            'Файл включает стек (HTML/CSS/JS)',
-            'Файл запрещает React/Vue'
+            'PROJECT_BRIEF.md описывает пользователя, боль, сценарий и что не входит в MVP',
+            'SCREEN_ELEMENT_MAP.md фиксирует элементы первого экрана и нужные id',
+            'AGENTS.md ограничивает стек HTML/CSS/JS и запрещает лишние фреймворки',
+            'Правила требуют маленькие diff, Run-проверку и вопросы при неясной задаче'
           ],
           starterFiles: { html: '', css: '', js: '' },
           steps: [
             {
               id: 's2-3',
-              title: 'Собрать рабочий контракт',
+              title: 'Собрать пакет из трёх файлов',
               target: 'prompt',
-              instruction: 'Напишите промпт для генерации AGENTS.md: стек, запреты, Screen Map, маленькие diff, проверки и правило "если задача мутная — сначала вопросы".',
-              checkIds: ['check-agents-md'],
-              hints: ['Ограничьте стек HTML/CSS/JS + LocalStorage.', 'Попросите опираться на PROJECT_BRIEF и SCREEN_ELEMENT_MAP.', 'Добавьте запрет "чинить всё сразу" и требование объяснять diff.'],
-              doneText: 'AGENTS.md стал ремнём безопасности для работы с агентом.'
+              instruction: 'Напишите промпт, который на основе MVP-паспорта и Prototype Autopsy создаёт три файла: PROJECT_BRIEF.md, SCREEN_ELEMENT_MAP.md и AGENTS.md. Обязательно: один сценарий, стек HTML/CSS/JS, запрет лишних зависимостей, маленькие diff, Run-проверка и правило "если задача мутная — сначала вопросы".',
+              checkIds: ['check-brief-role', 'check-brief-scenario', 'check-screen-map', 'check-agents-md'],
+              hints: ['Скажите агенту: не кодить, а подготовить handoff-файлы.', 'Попросите включить в AGENTS.md запрет на React/Vue/Supabase до отдельного решения.', 'Definition of Done должен быть проверяемым: preview работает, ошибок нет, один сценарий проходит.'],
+              doneText: 'Handoff-пакет собран. Теперь Antigravity получает систему координат, а не туманную просьбу.'
             }
           ],
           checks: [
-            { id: 'check-agents-md', label: 'Генерация правил', kind: 'functional', required: true, failHint: 'Заполните поля промпта, указав AGENTS.md или правила.' }
+            { id: 'check-brief-role', label: 'Пользователь и роль сервиса есть', kind: 'functional', required: true, failHint: 'Добавьте, для кого сервис и какую роль он выполняет.' },
+            { id: 'check-brief-scenario', label: 'Один сценарий зафиксирован', kind: 'functional', required: true, failHint: 'Опишите главный сценарий или шаги первого результата.' },
+            { id: 'check-screen-map', label: 'Карта экрана запрошена', kind: 'functional', required: true, failHint: 'Укажите SCREEN_ELEMENT_MAP.md, экран, блоки или кнопки.' },
+            { id: 'check-agents-md', label: 'Правила агента запрошены', kind: 'functional', required: true, failHint: 'Укажите AGENTS.md, правила агента и ограничения.' }
           ],
           agentInstructions: [],
           unlockText: 'Контекстный пакет готов к переносу в Antigravity.'
@@ -1679,27 +1687,28 @@ try {
     ],
     practice: {
       id: 'p3',
-      title: 'Мастерская 3: Оживить первый сценарий в IDE',
+      title: 'Мастерская 3: Живой MVP-сценарий и перенос в Antigravity',
       type: 'code',
       mode: 'mission',
-      durationMinutes: 90,
-      description: 'Сначала разогреваемся на маленьком DOM-действии, затем собираем рабочий сценарий "форма → состояние → список → результат". Этот паттерн переносится на CRM, калькулятор, тренажёр, подборщик или чек-лист качества.',
+      durationMinutes: 105,
+      description: 'Сначала собираем маленький "AI Pulse" — кнопку, которая даёт пользователю мгновенный результат. Затем делаем рабочий сценарий своей сущности: форма → состояние → список → результат. Финальный шаг — оформить перенос в Antigravity через Builder/Reviewer workflow.',
       steps: [
-        'Разогрейтесь на кликере: один элемент, одно событие, один результат.',
-        'Соберите форму и список как первый рабочий сценарий MVP.',
+        'Соберите AI Pulse Button: один элемент, одно событие, один понятный результат.',
+        'Соберите форму и список как первый рабочий сценарий своего MVP.',
         'Запустите Run после каждого маленького изменения.',
         'Сделайте Snapshot, когда Preview работает без ошибок.',
-        'Перенесите паттерн на свою сущность: заявка, смета, вопрос, товар или чек-лист.'
+        'Составьте Antigravity Transfer Prompt: как агент должен перенести сценарий и что Reviewer обязан проверить.'
       ],
-      expectedOutput: 'Рабочий сценарий MVP в песочнице: input, кнопка, список, состояние и snapshot.',
+      expectedOutput: 'Рабочий сценарий MVP в песочнице, snapshot, Antigravity Transfer Prompt и reviewer-notes.',
       initialPrompt: {
-        goal: 'Собери MVP трекера привычек микро-шагами',
+        goal: 'Собери первый живой сценарий моего MVP микро-шагами',
         context: 'Стек: HTML/CSS/JS + LocalStorage.',
-        constraints: 'Без фреймворков. Снапшот после каждого шага.',
-        dod: 'Превью работает без ошибок.'
+        constraints: 'Без фреймворков и внешних API. Снапшот после рабочего состояния.',
+        dod: 'Preview работает без ошибок, один сценарий проходит глазами и через checks.'
       },
       hints: [
-        'Используйте снапшоты перед сложными изменениями.'
+        'Сначала добейтесь живого результата в песочнице, потом переносите в Antigravity.',
+        'Reviewer нужен не для похвалы, а чтобы найти лишний diff, сломанный сценарий и риск.'
       ],
       simulationFeedback: {
         score: 100,
@@ -1712,88 +1721,123 @@ try {
       missions: [
         {
           id: 'coin-clicker',
-          title: 'Миссия 1. DOM-разогрев: кликер результата',
+          title: 'Миссия 1. AI Pulse Button: мгновенная ценность',
           type: 'dom-event',
           durationMinutes: 15,
-          intro: 'Мини-тренажёр перед настоящим MVP: находим элементы, вешаем событие и видим результат в Live Preview. Это первый опыт управления интерфейсом руками.',
-          artifact: 'dom-clicker-snapshot',
-          successCriteria: ['Счётчик начинается с нуля', 'Клик увеличивает число', 'Preview обновляется без ошибок'],
-          unlockText: 'Разогрев пройден: вы уже управляете DOM, а не просто смотрите на код.',
-          starterFiles: { html: '<div class="app">\n  <h1>0</h1>\n  <button>Клик</button>\n</div>', css: 'body { text-align: center; font-family: sans-serif; padding: 50px; }', js: '// Ваш код здесь' },
+          intro: 'Это не кликер ради кликера. Это мини-механика "пользователь нажал → система усилила сигнал": приоритет заявки, уверенность рекомендации, риск-скоринг, прогресс. Такой микро-вау легко перенести в любой MVP.',
+          artifact: 'ai-pulse-snapshot',
+          successCriteria: ['Показатель начинается с нуля', 'Клик увеличивает показатель', 'Preview обновляется без ошибок'],
+          unlockText: 'AI Pulse ожил: у интерфейса появился момент мгновенной пользы.',
+          starterFiles: { html: '<div class="app">\n  <p>AI-приоритет заявки</p>\n  <h1>0</h1>\n  <button>Усилить приоритет</button>\n</div>', css: 'body { text-align: center; font-family: sans-serif; padding: 50px; background: #101820; color: white; }\n.app { max-width: 360px; margin: 0 auto; }\nbutton { padding: 12px 18px; border: 0; border-radius: 8px; cursor: pointer; }', js: '// Ваш код здесь' },
           agentInstructions: [],
           steps: [
             { 
               id: 'step1', 
-              title: 'Дать элементам имена',
+              title: 'Дать сигналу стабильные id',
               target: 'html', 
-              instruction: 'Добавьте id="score" для элемента счёта и id="coin-btn" для кнопки. Агенту и JS нужны стабильные точки входа.',
+              instruction: 'Добавьте id="score" для показателя приоритета и id="coin-btn" для кнопки. Агенту и JS нужны стабильные точки входа, иначе перенос в реальный проект начнёт ломаться.',
               checkIds: ['html-score', 'html-btn'],
               hints: ['Ищите теги <h1> и <button>.', 'Добавьте атрибут id, не меняя смысл текста.', 'Пример: <h1 id="score">0</h1>.'],
-              doneText: 'Элементы получили имена. Теперь JS сможет обратиться к ним надёжно.'
+              doneText: 'Сигнал получил имя. Теперь JS сможет обратиться к нему надёжно.'
             },
             { 
               id: 'step2', 
-              title: 'Оживить кнопку',
+              title: 'Оживить момент пользы',
               target: 'js', 
-              instruction: 'Добавьте обработчик клика, который увеличивает число внутри #score на 1. Это базовый паттерн "событие → изменение состояния → рендер".',
+              instruction: 'Добавьте обработчик клика, который увеличивает число внутри #score на 1. Это базовый паттерн "событие → изменение состояния → рендер", из которого потом рождаются скоринг, прогресс и рекомендации.',
               checkIds: ['func-click'],
               hints: ['Получите кнопку и счётчик через document.getElementById.', 'Используйте addEventListener("click", ...).', 'Обновляйте textContent, а не innerHTML.'],
-              doneText: 'Кнопка ожила: пользователь делает действие и сразу видит результат.',
+              doneText: 'Момент пользы ожил: пользователь делает действие и сразу видит результат.',
               agentPatch: {
                 js: "const btn = document.getElementById('coin-btn');\nconst score = document.getElementById('score');\nlet count = parseInt(score.textContent) || 0;\nbtn.addEventListener('click', () => {\n  count += 1;\n  score.textContent = count;\n});",
-                explanation: 'Агент находит кнопку и счётчик по id, хранит число в переменной count и по клику увеличивает его, обновляя текст в #score. Прочитайте дифф: меняется только app.js, разметка не тронута.',
+                explanation: 'Агент находит кнопку и показатель по id, хранит число в переменной count и по клику увеличивает его, обновляя текст в #score. Прочитайте дифф: меняется только app.js, разметка не тронута.',
               },
             }
           ],
           checks: [
-            { id: 'html-score', kind: 'selector', label: 'Существует элемент с id="score"', selector: '#score', required: true, failHint: 'Добавьте <div id="score">0</div>' },
-            { id: 'html-btn', kind: 'selector', label: 'Существует элемент с id="coin-btn"', selector: '#coin-btn', required: true, failHint: 'Добавьте <button id="coin-btn">Клик!</button>' },
-            { id: 'func-click', kind: 'functional', label: 'Счетчик увеличивается по клику', script: 'const old = parseInt(api.text("#score"))||0; api.click("#coin-btn"); const cur = parseInt(api.text("#score"))||0; return cur > old;', required: true, failHint: 'Клик по кнопке не меняет число внутри #score' }
+            { id: 'html-score', kind: 'selector', label: 'Существует показатель с id="score"', selector: '#score', required: true, failHint: 'Добавьте <h1 id="score">0</h1>' },
+            { id: 'html-btn', kind: 'selector', label: 'Существует кнопка с id="coin-btn"', selector: '#coin-btn', required: true, failHint: 'Добавьте <button id="coin-btn">Усилить приоритет</button>' },
+            { id: 'func-click', kind: 'functional', label: 'Показатель увеличивается по клику', script: 'const old = parseInt(api.text("#score"))||0; api.click("#coin-btn"); const cur = parseInt(api.text("#score"))||0; return cur > old;', required: true, failHint: 'Клик по кнопке не меняет число внутри #score' }
           ]
         },
         {
           id: 'mvp-first-scenario',
-          title: 'Миссия 2. Первый рабочий сценарий MVP',
+          title: 'Миссия 2. Own MVP Scene: своя сущность на экране',
           type: 'state-render',
-          durationMinutes: 30,
-          intro: 'Соберите трекер привычек как универсальный скелет MVP. Важно не "привычки", а паттерн: пользователь вводит данные, система сохраняет состояние и показывает понятный результат.',
-          artifact: 'first-scenario-snapshot',
+          durationMinutes: 35,
+          intro: 'Здесь появляется первый настоящий пользовательский сценарий. Не важно, что это: заявка, клиент, смета, вопрос, товар, риск или чек-лист. Важно, что пользователь вводит сущность, система принимает её и показывает результат без перезагрузки.',
+          artifact: 'own-mvp-scene-snapshot',
           successCriteria: ['Форма рендерит новую сущность в список', 'Пустой ввод не ломает сценарий', 'Preview показывает результат без console-ошибок'],
-          unlockText: 'Первый сценарий работает. Теперь замените "привычку" на сущность своего проекта и добавьте одну ноу-хау фишку.',
-          starterFiles: { html: '<!-- Разметка -->', css: '/* Стили */', js: '// Логика' },
+          unlockText: 'Сцена MVP работает. Теперь её можно переносить в Antigravity как проверенный паттерн, а не как абстрактную идею.',
+          starterFiles: { html: '<section class="app">\n  <h1>Мой MVP-сценарий</h1>\n  <!-- Добавьте форму и список -->\n</section>', css: 'body { font-family: sans-serif; background: #101820; color: white; padding: 32px; }\n.app { max-width: 520px; margin: 0 auto; }\ninput, button { padding: 10px; margin-top: 8px; }', js: '// Логика сценария' },
           agentInstructions: [
             { agentName: 'Builder', skillName: 'state-render', instruction: 'Собрать только форму, список и рендер одной сущности. Не добавлять авторизацию, БД или внешние API.' },
-            { agentName: 'Product Coach', skillName: 'mvp-scenario', instruction: 'После прохождения миссии помочь заменить "привычку" на сущность проекта ученика и выбрать одну ноу-хау фишку.' }
+            { agentName: 'Product Coach', skillName: 'mvp-scenario', instruction: 'После прохождения миссии помочь назвать сущность проекта ученика и выбрать один микро-вау: приоритет, риск, подсказка или статус.' }
           ],
           steps: [
             { 
               id: 'step1', 
               title: 'Собрать вход и место результата',
               target: 'html', 
-              instruction: 'Создайте форму с id="habit-form" и список с id="habits-list". Это вход пользователя и место, где он видит результат.',
+              instruction: 'Создайте форму с id="entity-form" и список с id="entity-list". Это вход пользователя и место, где он видит результат. Текст сущности можно назвать под свой проект: заявка, клиент, вопрос, смета, задача.',
               checkIds: ['html-form', 'html-list'],
-              hints: ['Нужен тег <form>, чтобы ловить submit.', 'Нужен <div id="habits-list"> для результата.', 'Форма должна содержать input и button.'],
+              hints: ['Нужен тег <form>, чтобы ловить submit.', 'Нужен <div id="entity-list"> для результата.', 'Форма должна содержать input и button.'],
               doneText: 'Экран получил вход и место для результата.'
             },
             { 
               id: 'step2', 
               title: 'Добавить состояние и рендер',
               target: 'js', 
-              instruction: 'Напишите JS-логику, которая берёт текст из input, создаёт элемент списка и показывает его пользователю без перезагрузки страницы.',
-              checkIds: ['func-add-habit'],
-              hints: ['Слушайте событие submit у формы.', 'Используйте preventDefault, чтобы страница не перезагружалась.', 'Создавайте DOM-элемент и добавляйте его в habits-list.'],
+              instruction: 'Напишите JS-логику, которая берёт текст из input, создаёт элемент списка и показывает его пользователю без перезагрузки страницы. Не используйте innerHTML для пользовательского текста.',
+              checkIds: ['func-add-entity'],
+              hints: ['Слушайте событие submit у формы.', 'Используйте preventDefault, чтобы страница не перезагружалась.', 'Создавайте DOM-элемент и добавляйте его в entity-list.'],
               doneText: 'Рабочий сценарий появился: пользователь вводит данные и видит результат.',
               agentPatch: {
-                js: "const form = document.getElementById('habit-form');\nconst list = document.getElementById('habits-list');\nif (form && list) {\n  form.addEventListener('submit', (e) => {\n    e.preventDefault();\n    const input = form.querySelector('input');\n    const name = ((input && input.value) || '').trim();\n    if (!name) return;\n    const item = document.createElement('div');\n    item.textContent = name;\n    list.appendChild(item);\n    if (input) input.value = '';\n  });\n}",
-                explanation: 'Агент находит форму и список по id, слушает submit, отменяет перезагрузку (preventDefault), берёт текст из поля и добавляет новый элемент в #habits-list. Разметку из шага 1 не трогает.',
+                js: "const form = document.getElementById('entity-form');\nconst list = document.getElementById('entity-list');\nif (form && list) {\n  form.addEventListener('submit', (e) => {\n    e.preventDefault();\n    const input = form.querySelector('input');\n    const name = ((input && input.value) || '').trim();\n    if (!name) return;\n    const item = document.createElement('div');\n    item.textContent = name;\n    list.appendChild(item);\n    if (input) input.value = '';\n  });\n}",
+                explanation: 'Агент находит форму и список по id, слушает submit, отменяет перезагрузку (preventDefault), берёт текст из поля и добавляет новый элемент в #entity-list через textContent. Разметку из шага 1 не трогает.',
               },
             }
           ],
           checks: [
-            { id: 'html-form', kind: 'selector', label: 'Существует форма habit-form', selector: '#habit-form', required: true, failHint: 'Добавьте <form id="habit-form">' },
-            { id: 'html-list', kind: 'selector', label: 'Существует контейнер habits-list', selector: '#habits-list', required: true, failHint: 'Добавьте <div id="habits-list">' },
-            { id: 'func-add-habit', kind: 'functional', label: 'Форма добавляет привычку в список', script: 'const form = document.querySelector("#habit-form"); const input = form?.querySelector("input"); const before = api.text("#habits-list"); if (!form || !input) return false; input.value = "Пить воду"; form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); const after = api.text("#habits-list"); return after !== before && after.includes("Пить воду");', required: true, failHint: 'После submit новая привычка должна появиться внутри #habits-list.' }
+            { id: 'html-form', kind: 'selector', label: 'Существует форма entity-form', selector: '#entity-form', required: true, failHint: 'Добавьте <form id="entity-form">' },
+            { id: 'html-list', kind: 'selector', label: 'Существует контейнер entity-list', selector: '#entity-list', required: true, failHint: 'Добавьте <div id="entity-list">' },
+            { id: 'func-add-entity', kind: 'functional', label: 'Форма добавляет сущность в список', script: 'const form = document.querySelector("#entity-form"); const input = form?.querySelector("input"); const before = api.text("#entity-list"); if (!form || !input) return false; input.value = "Срочная заявка"; form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); const after = api.text("#entity-list"); return after !== before && after.includes("Срочная заявка");', required: true, failHint: 'После submit новая сущность должна появиться внутри #entity-list.' }
           ]
+        },
+        {
+          id: 'antigravity-transfer',
+          title: 'Миссия 3. Antigravity Transfer: Builder + Reviewer',
+          type: 'prompt-fix',
+          durationMinutes: 25,
+          intro: 'Теперь песочница становится протоколом переноса. Студент готовит задачу для Antigravity: Builder переносит рабочую сцену, Reviewer проверяет diff и сценарий, Product Coach следит, чтобы не расползся scope.',
+          artifact: 'antigravity-transfer-prompt.md + reviewer-notes',
+          successCriteria: [
+            'Промпт содержит Builder-задачу на перенос одного сценария',
+            'Промпт содержит Reviewer-задачу: проверить diff, preview, отсутствие лишних зависимостей и XSS-риска',
+            'Указаны артефакты, которые нужно вернуть: screenshot, walkthrough, changed files, risks',
+            'Есть правило остановки: если сценарий мутный, агент задаёт вопросы'
+          ],
+          starterFiles: { html: '', css: '', js: '' },
+          steps: [
+            {
+              id: 's3-transfer',
+              title: 'Собрать prompt для agent-first переноса',
+              target: 'prompt',
+              instruction: 'Составьте Antigravity Transfer Prompt: Builder переносит вашу сцену из песочницы в проект, Reviewer проверяет diff/preview/риски, Product Coach запрещает расширять scope. Попросите вернуть артефакты: screenshot, walkthrough, changed files, risks, next fix.',
+              checkIds: ['check-agents-md', 'check-screen-map'],
+              hints: ['Укажите, что переносится только один сценарий, без авторизации и внешних API.', 'Reviewer должен проверять не красоту, а поведение, diff, безопасность и лишние зависимости.', 'Попросите агента остановиться и задать вопросы, если бриф или экран непонятны.'],
+              doneText: 'Transfer Prompt готов. Теперь внешний IDE-агент получает рабочий сценарий и правила ревью.'
+            }
+          ],
+          checks: [
+            { id: 'check-agents-md', label: 'Роли и правила агента описаны', kind: 'functional', required: true, failHint: 'Добавьте Builder/Reviewer, правила агента или AGENTS.md.' },
+            { id: 'check-screen-map', label: 'Сценарий и экран упомянуты', kind: 'functional', required: true, failHint: 'Укажите, какой экран или сценарий переносится.' }
+          ],
+          agentInstructions: [
+            { agentName: 'Builder', skillName: 'state-render', instruction: 'Перенести только рабочую сцену: форма, список, рендер результата. Не менять стек и не добавлять внешние API.' },
+            { agentName: 'Reviewer', skillName: 'diff-audit', instruction: 'Проверить diff, preview, отсутствие лишних зависимостей, пользовательский сценарий и риск XSS.' }
+          ],
+          unlockText: 'Transfer-пакет готов: Week 3 закрыта не кодом ради кода, а переносимым workflow.'
         }
       ]
     },
@@ -2219,39 +2263,43 @@ try {
     ],
     practice: {
       id: 'p4',
-      title: 'Мастерская 4: Релизная репетиция и защита',
+      title: 'Мастерская 4: AI Red Team, Preview и Launch Show',
       type: 'code',
       mode: 'mission',
       durationMinutes: 120,
-      description: 'Финальная неделя превращает рабочий сценарий в защищаемый продукт: закрываем Quality Gate, убираем XSS-риск, публикуем внутренний preview и собираем короткую речь защиты.',
+      description: 'Финальная неделя превращает рабочий сценарий в защищаемый продукт: внешний GPT/Gem играет Red Team, студент закрывает XSS-риск, публикует внутренний preview, отдаёт ссылку на QA-review и собирает Launch Show pack для защиты.',
       steps: [
-        'Проверьте самый опасный пользовательский ввод и исправьте XSS.',
+        'Попросите GPT/Gem-наставника составить Red Team список атак на пользовательский ввод.',
+        'Исправьте самый опасный XSS-сценарий и объясните решение простыми словами.',
         'Запустите Preview без ошибок и сделайте финальный Snapshot.',
-        'Опубликуйте внутренний /preview/:id как учебный релиз.',
-        'Соберите 5-слайдовую структуру защиты и речь на 3 минуты.',
+        'Опубликуйте внутренний /preview/:id и отдайте ссылку на AI QA-review.',
+        'Соберите Launch Show: 5 слайдов, речь на 3 минуты, демо-маршрут и roadmap.',
         'Запишите roadmap из трёх улучшений после курса.'
       ],
       hints: [
         'Используйте escapeHtml для всех внешних данных.',
-        'Сценарий защиты не должен длиться дольше 3 минут.',
+        'Red Team должен искать риски, а не хвалить проект.',
+        'Launch Show не должен длиться дольше 3 минут.',
         'Все пункты Quality Gate должны быть закрыты до деплоя.'
       ],
       checklist: [
+        'AI Red Team список атак сохранён',
         'Уязвимость XSS исправлена (тесты проходят)',
         'Превью работает без падений',
-        'Текст защиты готов и проверен',
+        'QA-review по preview получен',
+        'Launch Show pack готов и проверен',
         'Снапшот v1.0 сделан'
       ],
       missions: [
         {
           id: 'xss-lab',
-          title: 'Миссия 1. Security Gate: закрыть XSS',
+          title: 'Миссия 1. AI Red Team: закрыть XSS',
           type: 'xss-lab',
           durationMinutes: 30,
-          unlockText: 'Security Gate закрыт: проект можно показывать без очевидной XSS-дыры.',
-          intro: 'Перед защитой нельзя показывать проект, который выполняет чужой HTML. На этой миссии вы чините типовую XSS-ошибку и учитесь объяснять, почему это важно.',
-          artifact: 'security-patch',
-          successCriteria: ['Функция escapeHtml применяется ко всему пользовательскому вводу', 'Опасный input выводится как текст', 'Решение можно объяснить простыми словами'],
+          unlockText: 'Red Team атака закрыта: проект можно показывать без очевидной XSS-дыры.',
+          intro: 'Перед защитой студент запускает внешнего GPT/Gem в роли Red Team: "как сломать мой ввод?". Затем чинит типовую XSS-ошибку в песочнице и учится объяснять, почему это не паранойя, а базовая гигиена продукта.',
+          artifact: 'red-team-list + security-patch',
+          successCriteria: ['Есть список из 5 атак/негативных вводов от Red Team', 'Функция escapeHtml применяется ко всему пользовательскому вводу', 'Опасный input выводится как текст', 'Решение можно объяснить простыми словами'],
           starterFiles: {
             html: `<div class="sandbox-app">\n  <div id="target"></div>\n</div>`,
             css: `.sandbox-app { padding: 2rem; color: white; }`,
@@ -2261,29 +2309,30 @@ try {
             {
               id: 's1',
               title: 'Сделать ввод безопасным',
-              instruction: 'Реализуйте функцию escapeHtml и примените её перед innerHTML, чтобы опасная строка отобразилась как текст, а не выполнилась как код.',
+              instruction: 'Сначала попросите своего GPT/Gem-наставника составить 5 опасных вводов для вашего MVP. Затем реализуйте функцию escapeHtml и примените её перед innerHTML, чтобы опасная строка отобразилась как текст, а не выполнилась как код.',
               hints: ["Используйте replace(/[&<>\\\"\\\\']/g, ...).", "Сначала создайте функцию, потом примените её прямо в строке с innerHTML.", "После исправления в Preview не должно появляться alert."],
               target: 'js',
               checkIds: ['check-xss-escaped'],
-              doneText: 'Опасный ввод больше не исполняется. Это маленькая правка с большим эффектом безопасности.'
+              doneText: 'Опасный ввод больше не исполняется. Red Team помог найти риск, а вы закрыли его маленькой проверяемой правкой.'
             }
           ],
           checks: [
             { id: 'check-xss-escaped', label: 'XSS уязвимость устранена', required: true, kind: 'js-pattern', pattern: 'function\\s+escapeHtml[\\s\\S]*innerHTML\\s*=\\s*escapeHtml\\(', failHint: 'Создайте функцию escapeHtml и передайте через неё input перед записью в innerHTML.' }
           ],
           agentInstructions: [
+            { agentName: 'External Red Team', skillName: 'PenTest', instruction: 'Составить 5 негативных вводов для проекта: XSS, длинная строка, пустой ввод, спецсимволы, попытка вставить ссылку/HTML.' },
             { agentName: 'Security QA', skillName: 'PenTest', instruction: 'Проверить наличие вызова escapeHtml при обновлении DOM.' }
           ]
         },
         {
           id: 'quota-deploy',
-          title: 'Миссия 2. Internal Deploy: показать результат',
+          title: 'Миссия 2. Preview QA: релиз под внешнюю проверку',
           type: 'quota-deploy',
           durationMinutes: 30,
-          unlockText: 'Preview опубликован. Теперь есть ссылка, которую можно показать куратору и использовать в защите.',
-          intro: 'Деплой здесь — не инфраструктурная магия, а учебный релиз. Вы фиксируете рабочее состояние и получаете /preview/:id, чтобы показать MVP без внешнего хостинга.',
-          artifact: 'preview-link',
-          successCriteria: ['Preview работает без ошибок', 'Проект развёрнут и имеет уникальный ID', 'Снапшот сделан до публикации'],
+          unlockText: 'Preview опубликован и готов к QA-review. Теперь у защиты есть проверяемая ссылка, а не рассказ "у меня работало".',
+          intro: 'Деплой здесь — учебный релиз. Студент фиксирует рабочее состояние, получает /preview/:id, открывает ссылку глазами и отдаёт её GPT/Gem или наставнику в роль QA-reviewer: что сломается, что непонятно, где риск.',
+          artifact: 'preview-link + qa-review.md',
+          successCriteria: ['Preview работает без ошибок', 'Проект развёрнут и имеет уникальный ID', 'Снапшот сделан до публикации', 'Ссылка отдана на QA-review и возвращены минимум 3 замечания/проверки'],
           starterFiles: {
             html: `<h1>Мой финальный проект</h1>`,
             css: `h1 { color: #00F2FE; }`,
@@ -2292,12 +2341,12 @@ try {
           steps: [
             {
               id: 's1',
-              title: 'Опубликовать учебный релиз',
-              instruction: 'Сначала нажмите Run и убедитесь, что Preview живой. Затем сделайте Snapshot и опубликуйте внутренний deploy.',
-              hints: ['Не деплойте красный Preview: сначала исправьте Problems.', 'Snapshot нужен как точка возврата перед релизом.', 'После публикации откройте ссылку /preview/:id и проверьте глазами.'],
+              title: 'Опубликовать и отдать на QA-review',
+              instruction: 'Сначала нажмите Run и убедитесь, что Preview живой. Затем сделайте Snapshot, опубликуйте внутренний deploy, откройте /preview/:id и попросите внешнего GPT/Gem или наставника проверить ссылку по чек-листу: основной сценарий, пустой ввод, длинный ввод, мобильный вид, понятность первого экрана.',
+              hints: ['Не деплойте красный Preview: сначала исправьте Problems.', 'Snapshot нужен как точка возврата перед релизом.', 'QA-review должен вернуть конкретные замечания, а не общую похвалу.'],
               target: 'deploy',
               checkIds: ['check-deploy-published'],
-              doneText: 'Учебный релиз готов: у проекта появилась проверяемая ссылка.'
+              doneText: 'Учебный релиз готов: у проекта появилась проверяемая ссылка и внешний QA-след.'
             }
           ],
           checks: [
@@ -2307,27 +2356,27 @@ try {
         },
         {
           id: 'defense-script',
-          title: 'Миссия 3. Demo Coach: защита на 3 минуты',
+          title: 'Миссия 3. Launch Show: защита на 3 минуты',
           type: 'ai-media-prompt',
           durationMinutes: 30,
-          unlockText: 'Сценарий защиты готов. Осталось прогнать демо вслух и уложиться в 3 минуты.',
-          intro: 'Финальный артефакт — не длинная презентация, а ясный рассказ: какая боль, что работает, как проверяли, что улучшите дальше.',
-          artifact: 'defense-script.md',
-          successCriteria: ['Написан промпт с запросом 5 слайдов и речи'],
+          unlockText: 'Launch Show pack готов. Осталось прогнать демо вслух, открыть preview и уложиться в 3 минуты.',
+          intro: 'Финальный артефакт — не длинная презентация, а короткий продуктовый показ. Студент просит GPT/Gem или любой слайдовый инструмент собрать структуру: боль, демо, как работал агент, как проверяли безопасность, что дальше.',
+          artifact: 'launch-show-pack.md',
+          successCriteria: ['Написан промпт с запросом 5 слайдов и речи', 'Есть маршрут живого демо по preview-ссылке', 'Есть 3 roadmap-шага после курса', 'Упомянуты Red Team и QA-review'],
           starterFiles: { html: '', css: '', js: '' },
           steps: [
             {
               id: 's1',
-              title: 'Собрать речь без воды',
-              instruction: 'Составьте промпт для Demo Coach: 5 слайдов, речь на 3 минуты, ссылка на preview, что работает, какие риски закрыты и roadmap из 3 улучшений.',
-              hints: ['Укажите, что нужно 5 слайдов.', 'Добавьте PROJECT_BRIEF и ссылку preview.', 'Попросите тон: просто, уверенно, без технической бравады.'],
+              title: 'Собрать Launch Show без воды',
+              instruction: 'Составьте промпт для Demo Coach или слайдового ассистента: 5 слайдов, речь на 3 минуты, ссылка на preview, маршрут живого демо, что работает, какие риски закрыты через Red Team/QA-review и roadmap из 3 улучшений.',
+              hints: ['Укажите, что нужно 5 слайдов и речь, а не длинный отчёт.', 'Добавьте PROJECT_BRIEF, preview-ссылку, Red Team выводы и QA-review.', 'Попросите тон: просто, уверенно, без технической бравады.'],
               target: 'prompt',
               checkIds: ['check-speech-prompt'],
-              doneText: 'Защита получила структуру: теперь можно репетировать, а не импровизировать.'
+              doneText: 'Launch Show получил структуру: теперь можно репетировать живой показ, а не импровизировать.'
             }
           ],
           checks: [
-            { id: 'check-speech-prompt', label: 'Промпт включает требования к 5 слайдам', required: true, kind: 'js-pattern', failHint: 'Запросите 5 слайдов и текст речи' }
+            { id: 'check-speech-prompt', label: 'Промпт включает требования к 5 слайдам и речи', required: true, kind: 'js-pattern', failHint: 'Запросите 5 слайдов и текст речи' }
           ],
           agentInstructions: []
         }
@@ -2349,7 +2398,7 @@ try {
       },
       {
         id: 'q4-2',
-        question: 'Почему опасно вставлять имя привычки через innerHTML без escape?',
+        question: 'Почему опасно вставлять название сущности через innerHTML без escape?',
         options: [
           'Замедляет браузер.',
           'Если пользователь введёт <script> или <img onerror>, выполнится произвольный JS — это и есть XSS.',
@@ -2469,6 +2518,24 @@ export const resourceLinks: ResourceLink[] = [
     description: 'Берёт issue, исследует репозиторий, делает Pull Request. Запуск из IDE, CLI, MCP.',
     url: 'https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent',
     category: 'agents',
+  },
+  {
+    id: 'r-agent-gpts',
+    title: 'OpenAI Help — создание GPT',
+    description: 'Официальная инструкция: где открыть GPT Builder, как задать инструкции, knowledge, actions/apps и проверить ассистента в preview.',
+    url: 'https://help.openai.com/en/articles/8554397-creating-a-gpt',
+    category: 'agents',
+    weekIds: [1],
+    level: 'required',
+  },
+  {
+    id: 'r-agent-gems',
+    title: 'Gemini Help — создание Gem',
+    description: 'Официальная инструкция Gemini: Explore Gems, New Gem, Persona/Task/Context/Format, files as knowledge и preview перед сохранением.',
+    url: 'https://support.google.com/gemini/answer/15235603',
+    category: 'agents',
+    weekIds: [1],
+    level: 'required',
   },
 
   // Git и GitHub
